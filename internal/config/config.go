@@ -45,6 +45,10 @@ type Config struct {
 	ChainTxGasLimit        uint64
 	IndexerPollInterval    time.Duration
 	IndexerBatchSize       int32
+	IndexerIngestEnabled   bool
+	IndexerStartBlock      uint64
+	IndexerBlockBatchSize  uint64
+	IndexerConfirmations   uint64
 	WSEnabled              bool
 	WSPollInterval         time.Duration
 	MaxRequestBodyBytes    int64
@@ -89,6 +93,10 @@ func Load() Config {
 		ChainTxGasLimit:        getEnvUint64("CHAIN_TX_GAS_LIMIT", 300000),
 		IndexerPollInterval:    getEnvDuration("INDEXER_POLL_INTERVAL", 2*time.Second),
 		IndexerBatchSize:       getEnvInt32("INDEXER_BATCH_SIZE", 100),
+		IndexerIngestEnabled:   getEnvBool("INDEXER_INGEST_ENABLED", false),
+		IndexerStartBlock:      getEnvUint64("INDEXER_START_BLOCK", 0),
+		IndexerBlockBatchSize:  getEnvUint64("INDEXER_BLOCK_BATCH_SIZE", 500),
+		IndexerConfirmations:   getEnvUint64("INDEXER_CONFIRMATIONS", 2),
 		WSEnabled:              getEnvBool("WS_ENABLED", true),
 		WSPollInterval:         getEnvDuration("WS_POLL_INTERVAL", 2*time.Second),
 		MaxRequestBodyBytes:    getEnvInt64("MAX_REQUEST_BODY_BYTES", 62914560), // 60 MiB

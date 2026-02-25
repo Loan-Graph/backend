@@ -2,8 +2,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"math"
+	"strconv"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/loangraph/backend/internal/indexer"
 )
@@ -51,6 +55,48 @@ LIMIT $1
 
 func (r *IndexerRepository) MarkProcessed(ctx context.Context, eventID int64) error {
 	_, err := r.pool.Exec(ctx, `UPDATE chain_events SET processed = TRUE WHERE id = $1`, eventID)
+	return err
+}
+
+func (r *IndexerRepository) GetIngestionCursor(ctx context.Context, key string) (uint64, bool, error) {
+	var raw string
+	err := r.pool.QueryRow(ctx, `SELECT value FROM app_metadata WHERE key = $1`, key).Scan(&raw)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, false, nil
+		}
+		return 0, false, err
+	}
+	out, err := strconv.ParseUint(raw, 10, 64)
+	if err != nil {
+		return 0, false, fmt.Errorf("invalid ingestion cursor value: %w", err)
+	}
+	return out, true, nil
+}
+
+func (r *IndexerRepository) SetIngestionCursor(ctx context.Context, key string, blockNumber uint64) error {
+	_, err := r.pool.Exec(ctx, `
+INSERT INTO app_metadata (key, value, updated_at)
+VALUES ($1, $2, NOW())
+ON CONFLICT (key)
+DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+`, key, strconv.FormatUint(blockNumber, 10))
+	return err
+}
+
+func (r *IndexerRepository) InsertChainEvent(ctx context.Context, ev indexer.IngestedEvent) error {
+	_, err := r.pool.Exec(ctx, `
+INSERT INTO chain_events (contract_addr, event_name, tx_hash, block_number, log_index, raw_data, processed)
+VALUES ($1, $2, $3, $4, $5, $6::jsonb, FALSE)
+ON CONFLICT (tx_hash, log_index) DO NOTHING
+`,
+		ev.ContractAddr,
+		ev.EventName,
+		ev.TXHash,
+		int64(ev.BlockNumber),
+		int32(ev.LogIndex),
+		string(ev.RawData),
+	)
 	return err
 }
 

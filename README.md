@@ -106,3 +106,4 @@ make compose-down
 - Global request size cap is configurable via `MAX_REQUEST_BODY_BYTES` (defaults to 60 MiB).
 - Chain writer mode is configurable via `CHAIN_WRITER_MODE=stub|real`.
 - `real` mode currently uses node-managed signing over JSON-RPC (`eth_sendTransaction`) with `CHAIN_WRITER_FROM_ADDRESS` and `CREDITCOIN_HTTP_RPC`.
+- Indexer chain ingestion is opt-in via `INDEXER_INGEST_ENABLED=true` and uses `eth_blockNumber`/`eth_getLogs` from `CREDITCOIN_HTTP_RPC` to populate `chain_events` before projections.
