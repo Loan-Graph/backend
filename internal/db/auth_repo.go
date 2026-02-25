@@ -13,6 +13,7 @@ type User struct {
 	Email         string
 	EmailVerified bool
 	WalletAddress string
+	Role          string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }
@@ -47,11 +48,11 @@ DO UPDATE SET
   email_verified = EXCLUDED.email_verified,
   wallet_address = EXCLUDED.wallet_address,
   updated_at = NOW()
-RETURNING id, privy_subject, email, email_verified, wallet_address, created_at, updated_at
+RETURNING id, privy_subject, email, email_verified, wallet_address, role, created_at, updated_at
 `
 	u := &User{}
 	err := r.pool.QueryRow(ctx, q, privySubject, email, emailVerified, walletAddress).
-		Scan(&u.ID, &u.PrivySubject, &u.Email, &u.EmailVerified, &u.WalletAddress, &u.CreatedAt, &u.UpdatedAt)
+		Scan(&u.ID, &u.PrivySubject, &u.Email, &u.EmailVerified, &u.WalletAddress, &u.Role, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -59,14 +60,20 @@ RETURNING id, privy_subject, email, email_verified, wallet_address, created_at, 
 }
 
 func (r *AuthRepository) GetUserByID(ctx context.Context, userID string) (*User, error) {
-	q := `SELECT id, privy_subject, email, email_verified, wallet_address, created_at, updated_at FROM users WHERE id = $1`
+	q := `SELECT id, privy_subject, email, email_verified, wallet_address, role, created_at, updated_at FROM users WHERE id = $1`
 	u := &User{}
 	err := r.pool.QueryRow(ctx, q, userID).
-		Scan(&u.ID, &u.PrivySubject, &u.Email, &u.EmailVerified, &u.WalletAddress, &u.CreatedAt, &u.UpdatedAt)
+		Scan(&u.ID, &u.PrivySubject, &u.Email, &u.EmailVerified, &u.WalletAddress, &u.Role, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return u, nil
+}
+
+func (r *AuthRepository) SetUserRole(ctx context.Context, userID, role string) error {
+	q := `UPDATE users SET role = $2, updated_at = NOW() WHERE id = $1`
+	_, err := r.pool.Exec(ctx, q, userID, role)
+	return err
 }
 
 func (r *AuthRepository) CreateSession(ctx context.Context, userID, refreshHash, userAgent, ipAddress string, expiresAt time.Time) (*Session, error) {

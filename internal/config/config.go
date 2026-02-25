@@ -31,7 +31,8 @@ type Config struct {
 	PrivyAudience        string
 	PrivyVerificationKey string
 
-	AuthEnableBearer bool
+	AuthEnableBearer          bool
+	AuthBootstrapAdminSubject string
 }
 
 func Load() Config {
@@ -59,7 +60,8 @@ func Load() Config {
 		PrivyAudience:        getEnv("PRIVY_AUDIENCE", ""),
 		PrivyVerificationKey: getEnv("PRIVY_VERIFICATION_KEY", ""),
 
-		AuthEnableBearer: getEnvBool("AUTH_ENABLE_BEARER", false),
+		AuthEnableBearer:          getEnvBool("AUTH_ENABLE_BEARER", false),
+		AuthBootstrapAdminSubject: getEnv("AUTH_BOOTSTRAP_ADMIN_SUBJECT", ""),
 	}
 }
 

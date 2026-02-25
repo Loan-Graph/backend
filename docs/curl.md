@@ -65,3 +65,13 @@ curl -i -b cookies.txt -c cookies.txt -X POST "$BASE_URL/v1/auth/logout"
 Expected:
 - HTTP 200
 - auth cookies cleared
+
+## 8) Admin endpoint (requires admin role)
+
+```bash
+curl -i -b cookies.txt "$BASE_URL/admin/system/health"
+```
+
+Expected:
+- HTTP 200 for admin user
+- HTTP 403 for non-admin user

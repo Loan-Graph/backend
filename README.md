@@ -50,6 +50,12 @@ curl http://localhost:8090/v1/meta
 - `POST /v1/auth/logout`
 - `GET /v1/auth/me`
 
+## Admin Endpoint (Role-Protected)
+- `GET /admin/system/health` (requires `role=admin` in backend auth token)
+
+## Auth Role Bootstrap
+- Set `AUTH_BOOTSTRAP_ADMIN_SUBJECT=<privy subject>` in `.env` to promote that Privy subject to admin at login time.
+
 ## Make Commands
 From `backend/`:
 

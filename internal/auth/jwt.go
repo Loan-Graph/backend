@@ -17,6 +17,7 @@ type JWTManager struct {
 type Claims struct {
 	UserID    string `json:"uid"`
 	SessionID string `json:"sid"`
+	Role      string `json:"rol"`
 	Type      string `json:"typ"`
 	jwt.RegisteredClaims
 }
@@ -29,11 +30,12 @@ func NewJWTManager(issuer, audience, signingKey string) *JWTManager {
 	}
 }
 
-func (m *JWTManager) Mint(userID, sessionID, tokenType string, ttl time.Duration) (string, error) {
+func (m *JWTManager) Mint(userID, sessionID, role, tokenType string, ttl time.Duration) (string, error) {
 	now := time.Now().UTC()
 	claims := Claims{
 		UserID:    userID,
 		SessionID: sessionID,
+		Role:      role,
 		Type:      tokenType,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    m.issuer,

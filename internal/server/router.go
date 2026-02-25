@@ -46,6 +46,11 @@ func NewRouter(cfg config.Config, logger *slog.Logger, deps Dependencies) *gin.E
 		protected := authGroup.Group("")
 		protected.Use(middleware.RequireAuth(deps.JWTManager))
 		protected.GET("/me", deps.AuthHandler.Me)
+
+		adminHandler := handlers.NewAdminHandler()
+		adminGroup := r.Group("/admin")
+		adminGroup.Use(middleware.RequireAuth(deps.JWTManager), middleware.RequireRole(auth.RoleAdmin))
+		adminGroup.GET("/system/health", adminHandler.SystemHealth)
 	}
 
 	r.NoRoute(func(c *gin.Context) {

@@ -66,3 +66,13 @@ paths:
           description: User profile
         '401':
           description: Unauthorized
+  /admin/system/health:
+    get:
+      summary: Admin-only system health endpoint
+      responses:
+        '200':
+          description: Admin health response
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (insufficient role)

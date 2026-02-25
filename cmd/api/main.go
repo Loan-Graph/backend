@@ -34,7 +34,7 @@ func main() {
 	authRepo := db.NewAuthRepository(pool)
 	jwtManager := auth.NewJWTManager(cfg.JWTIssuer, cfg.JWTAudience, cfg.JWTSigningKey)
 	privyVerifier := auth.NewPrivyTokenVerifier(cfg.PrivyIssuer, cfg.PrivyAudience, cfg.PrivyVerificationKey, cfg.PrivyJWKSURL)
-	authService := auth.NewService(authRepo, jwtManager, privyVerifier, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+	authService := auth.NewService(authRepo, jwtManager, privyVerifier, cfg.JWTAccessTTL, cfg.JWTRefreshTTL, cfg.AuthBootstrapAdminSubject)
 	authHandler := handlers.NewAuthHandler(authService, auth.CookieConfig{Domain: cfg.CookieDomain, Secure: cfg.CookieSecure}, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
 
 	r := server.NewRouter(cfg, logger, server.Dependencies{Pinger: pool, AuthHandler: authHandler, JWTManager: jwtManager})
