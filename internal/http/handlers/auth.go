@@ -46,6 +46,7 @@ func (h *AuthHandler) LoginWithPrivy(c *gin.Context) {
 			"email_verified": tokens.User.EmailVerified,
 			"wallet_address": tokens.User.WalletAddress,
 			"privy_subject":  tokens.User.PrivySubject,
+			"role":           tokens.User.Role,
 		},
 		"session": gin.H{"authenticated": true},
 	})
@@ -99,6 +100,7 @@ func (h *AuthHandler) Me(c *gin.Context) {
 			"email_verified": user.EmailVerified,
 			"wallet_address": user.WalletAddress,
 			"privy_subject":  user.PrivySubject,
+			"role":           user.Role,
 		},
 	})
 }

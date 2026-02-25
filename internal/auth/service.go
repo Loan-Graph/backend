@@ -17,6 +17,7 @@ import (
 type Repository interface {
 	UpsertUser(ctx context.Context, privySubject, email string, emailVerified bool, walletAddress string) (*db.User, error)
 	GetUserByID(ctx context.Context, userID string) (*db.User, error)
+	SetUserRole(ctx context.Context, userID, role string) error
 	CreateSession(ctx context.Context, userID, refreshHash, userAgent, ipAddress string, expiresAt time.Time) (*db.Session, error)
 	GetSessionByID(ctx context.Context, sessionID string) (*db.Session, error)
 	RevokeSession(ctx context.Context, sessionID string) error
@@ -29,6 +30,8 @@ type Service struct {
 	verifier   PrivyVerifier
 	accessTTL  time.Duration
 	refreshTTL time.Duration
+
+	bootstrapAdminSubject string
 }
 
 type AuthTokens struct {
@@ -38,8 +41,15 @@ type AuthTokens struct {
 	User         *db.User
 }
 
-func NewService(repo Repository, jwt *JWTManager, verifier PrivyVerifier, accessTTL, refreshTTL time.Duration) *Service {
-	return &Service{repo: repo, jwt: jwt, verifier: verifier, accessTTL: accessTTL, refreshTTL: refreshTTL}
+func NewService(repo Repository, jwt *JWTManager, verifier PrivyVerifier, accessTTL, refreshTTL time.Duration, bootstrapAdminSubject string) *Service {
+	return &Service{
+		repo:                  repo,
+		jwt:                   jwt,
+		verifier:              verifier,
+		accessTTL:             accessTTL,
+		refreshTTL:            refreshTTL,
+		bootstrapAdminSubject: strings.TrimSpace(bootstrapAdminSubject),
+	}
 }
 
 func (s *Service) LoginWithPrivy(ctx context.Context, privyAccessToken, userAgent, ipAddress string) (*AuthTokens, error) {
@@ -52,8 +62,14 @@ func (s *Service) LoginWithPrivy(ctx context.Context, privyAccessToken, userAgen
 	if err != nil {
 		return nil, err
 	}
+	if s.bootstrapAdminSubject != "" && identity.Subject == s.bootstrapAdminSubject && user.Role != RoleAdmin {
+		if err := s.repo.SetUserRole(ctx, user.ID, RoleAdmin); err != nil {
+			return nil, err
+		}
+		user.Role = RoleAdmin
+	}
 
-	bundle, err := s.createSessionAndTokens(ctx, user.ID, userAgent, ipAddress)
+	bundle, err := s.createSessionAndTokens(ctx, user.ID, user.Role, userAgent, ipAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -94,12 +110,11 @@ func (s *Service) Refresh(ctx context.Context, refreshToken, userAgent, ipAddres
 		return nil, err
 	}
 
-	bundle, err := s.createSessionAndTokens(ctx, session.UserID, userAgent, ipAddress)
+	user, err := s.repo.GetUserByID(ctx, session.UserID)
 	if err != nil {
 		return nil, err
 	}
-
-	user, err := s.repo.GetUserByID(ctx, session.UserID)
+	bundle, err := s.createSessionAndTokens(ctx, session.UserID, user.Role, userAgent, ipAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +137,10 @@ func (s *Service) Me(ctx context.Context, userID string) (*db.User, error) {
 	return s.repo.GetUserByID(ctx, userID)
 }
 
-func (s *Service) createSessionAndTokens(ctx context.Context, userID, userAgent, ipAddress string) (*sessionBundle, error) {
+func (s *Service) createSessionAndTokens(ctx context.Context, userID, role, userAgent, ipAddress string) (*sessionBundle, error) {
+	if strings.TrimSpace(role) == "" {
+		role = RoleLender
+	}
 	expiresAt := time.Now().UTC().Add(s.refreshTTL)
 	sessionSeed := uuid.NewString()
 	session, err := s.repo.CreateSession(ctx, userID, hashToken(sessionSeed), userAgent, ipAddress, expiresAt)
@@ -130,11 +148,11 @@ func (s *Service) createSessionAndTokens(ctx context.Context, userID, userAgent,
 		return nil, err
 	}
 
-	accessToken, err := s.jwt.Mint(userID, session.ID, "access", s.accessTTL)
+	accessToken, err := s.jwt.Mint(userID, session.ID, role, "access", s.accessTTL)
 	if err != nil {
 		return nil, err
 	}
-	refreshToken, err := s.jwt.Mint(userID, session.ID, "refresh", s.refreshTTL)
+	refreshToken, err := s.jwt.Mint(userID, session.ID, role, "refresh", s.refreshTTL)
 	if err != nil {
 		return nil, err
 	}

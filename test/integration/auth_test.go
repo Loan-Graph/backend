@@ -41,6 +41,7 @@ func (r *fakeRepo) UpsertUser(_ context.Context, privySubject, email string, ema
 		return u, nil
 	}
 	u := &db.User{ID: "u-1", PrivySubject: privySubject, Email: email, EmailVerified: emailVerified, WalletAddress: walletAddress}
+	u.Role = auth.RoleLender
 	r.users[privySubject] = u
 	return u, nil
 }
@@ -82,12 +83,22 @@ func (r *fakeRepo) UpdateSessionRefreshHash(_ context.Context, sessionID, refres
 	return nil
 }
 
+func (r *fakeRepo) SetUserRole(_ context.Context, userID, role string) error {
+	for _, u := range r.users {
+		if u.ID == userID {
+			u.Role = role
+			return nil
+		}
+	}
+	return context.Canceled
+}
+
 func TestAuthLoginSetsCookies(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	repo := newFakeRepo()
 	jwtManager := auth.NewJWTManager("issuer", "aud", "super-secret")
-	svc := auth.NewService(repo, jwtManager, fakeVerifier{}, 15*time.Minute, 24*time.Hour)
+	svc := auth.NewService(repo, jwtManager, fakeVerifier{}, 15*time.Minute, 24*time.Hour, "")
 	h := handlers.NewAuthHandler(svc, auth.CookieConfig{}, 15*time.Minute, 24*time.Hour)
 
 	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), server.Dependencies{AuthHandler: h, JWTManager: jwtManager})
@@ -104,5 +115,82 @@ func TestAuthLoginSetsCookies(t *testing.T) {
 	cookies := w.Result().Cookies()
 	if len(cookies) < 2 {
 		t.Fatalf("expected auth cookies to be set")
+	}
+}
+
+func TestAdminEndpointRequiresAdminRole(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	repo := newFakeRepo()
+	jwtManager := auth.NewJWTManager("issuer", "aud", "super-secret")
+	svc := auth.NewService(repo, jwtManager, fakeVerifier{}, 15*time.Minute, 24*time.Hour, "")
+	h := handlers.NewAuthHandler(svc, auth.CookieConfig{}, 15*time.Minute, 24*time.Hour)
+	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), server.Dependencies{AuthHandler: h, JWTManager: jwtManager})
+
+	loginBody, _ := json.Marshal(map[string]string{"privy_access_token": "token"})
+	loginReq := httptest.NewRequest(http.MethodPost, "/v1/auth/privy/login", bytes.NewReader(loginBody))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginW := httptest.NewRecorder()
+	r.ServeHTTP(loginW, loginReq)
+	if loginW.Code != http.StatusOK {
+		t.Fatalf("expected login 200, got %d", loginW.Code)
+	}
+
+	var accessCookie *http.Cookie
+	for _, c := range loginW.Result().Cookies() {
+		if c.Name == auth.AccessCookieName {
+			accessCookie = c
+			break
+		}
+	}
+	if accessCookie == nil {
+		t.Fatalf("expected access cookie")
+	}
+
+	adminReq := httptest.NewRequest(http.MethodGet, "/admin/system/health", nil)
+	adminReq.AddCookie(accessCookie)
+	adminW := httptest.NewRecorder()
+	r.ServeHTTP(adminW, adminReq)
+	if adminW.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for lender role, got %d", adminW.Code)
+	}
+}
+
+func TestBootstrapAdminCanAccessAdminEndpoint(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	repo := newFakeRepo()
+	jwtManager := auth.NewJWTManager("issuer", "aud", "super-secret")
+	subject := "did:privy:test-user"
+	svc := auth.NewService(repo, jwtManager, fakeVerifier{}, 15*time.Minute, 24*time.Hour, subject)
+	h := handlers.NewAuthHandler(svc, auth.CookieConfig{}, 15*time.Minute, 24*time.Hour)
+	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), server.Dependencies{AuthHandler: h, JWTManager: jwtManager})
+
+	loginBody, _ := json.Marshal(map[string]string{"privy_access_token": "token"})
+	loginReq := httptest.NewRequest(http.MethodPost, "/v1/auth/privy/login", bytes.NewReader(loginBody))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginW := httptest.NewRecorder()
+	r.ServeHTTP(loginW, loginReq)
+	if loginW.Code != http.StatusOK {
+		t.Fatalf("expected login 200, got %d", loginW.Code)
+	}
+
+	var accessCookie *http.Cookie
+	for _, c := range loginW.Result().Cookies() {
+		if c.Name == auth.AccessCookieName {
+			accessCookie = c
+			break
+		}
+	}
+	if accessCookie == nil {
+		t.Fatalf("expected access cookie")
+	}
+
+	adminReq := httptest.NewRequest(http.MethodGet, "/admin/system/health", nil)
+	adminReq.AddCookie(accessCookie)
+	adminW := httptest.NewRecorder()
+	r.ServeHTTP(adminW, adminReq)
+	if adminW.Code != http.StatusOK {
+		t.Fatalf("expected 200 for admin role, got %d", adminW.Code)
 	}
 }

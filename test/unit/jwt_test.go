@@ -9,7 +9,7 @@ import (
 
 func TestJWTMintAndParse(t *testing.T) {
 	m := auth.NewJWTManager("issuer", "aud", "secret")
-	tok, err := m.Mint("u1", "s1", "access", 5*time.Minute)
+	tok, err := m.Mint("u1", "s1", auth.RoleLender, "access", 5*time.Minute)
 	if err != nil {
 		t.Fatalf("mint error: %v", err)
 	}
@@ -18,7 +18,7 @@ func TestJWTMintAndParse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse error: %v", err)
 	}
-	if claims.UserID != "u1" || claims.SessionID != "s1" || claims.Type != "access" {
+	if claims.UserID != "u1" || claims.SessionID != "s1" || claims.Type != "access" || claims.Role != auth.RoleLender {
 		t.Fatalf("unexpected claims: %+v", claims)
 	}
 }
