@@ -86,6 +86,14 @@ func (m *loanRepoMock) GetPortfolioAnalytics(_ context.Context, lenderID string)
 	return &loandomain.PortfolioAnalytics{LenderID: lenderID}, nil
 }
 
+func (m *loanRepoMock) ListByBorrower(_ context.Context, _ string, _ int32, _ int32) ([]loandomain.Entity, error) {
+	return []loandomain.Entity{}, nil
+}
+
+func (m *loanRepoMock) GetPortfolioHealth(_ context.Context, lenderID string) (*loandomain.PortfolioHealth, error) {
+	return &loandomain.PortfolioHealth{LenderID: lenderID}, nil
+}
+
 type outboxRepoMock struct {
 	topics []string
 }

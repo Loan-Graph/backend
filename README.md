@@ -60,6 +60,10 @@ curl http://localhost:8090/v1/meta
 - `POST /v1/loans/:loanId/repay`
 - `POST /v1/loans/:loanId/default`
 - `GET /v1/portfolio/analytics`
+- `GET /v1/portfolio/health`
+- `GET /v1/passport/:borrowerHash`
+- `GET /v1/passport/:borrowerHash/history`
+- `GET /v1/passport/:borrowerHash/nft`
 
 ## Auth Role Bootstrap
 - Set `AUTH_BOOTSTRAP_ADMIN_SUBJECT=<privy subject>` in `.env` to promote that Privy subject to admin at login time.

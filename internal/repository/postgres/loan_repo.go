@@ -202,3 +202,84 @@ WHERE lender_id = $1
 	}
 	return out, nil
 }
+
+func (r *LoanRepository) ListByBorrower(ctx context.Context, borrowerID string, limit, offset int32) ([]loan.Entity, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	q := `
+SELECT id, loan_hash, lender_id, borrower_id, principal_minor, currency_code,
+       interest_rate_bps, start_date, maturity_date, amount_repaid_minor,
+       status, on_chain_tx, on_chain_confirmed, risk_grade, metadata, created_at, updated_at
+FROM loans
+WHERE borrower_id = $1
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3
+`
+	rows, err := r.pool.Query(ctx, q, borrowerID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	out := make([]loan.Entity, 0)
+	for rows.Next() {
+		var item loan.Entity
+		if err := rows.Scan(
+			&item.ID, &item.LoanHash, &item.LenderID, &item.BorrowerID, &item.PrincipalMinor, &item.CurrencyCode,
+			&item.InterestRateBPS, &item.StartDate, &item.MaturityDate, &item.AmountRepaid,
+			&item.Status, &item.OnChainTX, &item.OnChainConfirmed, &item.RiskGrade, &item.Metadata, &item.CreatedAt, &item.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		out = append(out, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (r *LoanRepository) GetPortfolioHealth(ctx context.Context, lenderID string) (*loan.PortfolioHealth, error) {
+	out := &loan.PortfolioHealth{
+		LenderID: lenderID,
+		ScoreBands: []loan.ScoreBand{
+			{Label: "300-549", Count: 0},
+			{Label: "550-699", Count: 0},
+			{Label: "700-850", Count: 0},
+		},
+	}
+
+	qSummary := `
+SELECT
+  COUNT(DISTINCT b.id)::bigint AS unique_borrowers,
+  COALESCE(AVG(pc.credit_score), 0)::float8 AS average_score
+FROM borrowers b
+LEFT JOIN passport_cache pc ON pc.borrower_id = b.id
+WHERE b.lender_id = $1
+`
+	if err := r.pool.QueryRow(ctx, qSummary, lenderID).Scan(&out.UniqueBorrowers, &out.AverageScore); err != nil {
+		return nil, err
+	}
+
+	qBands := `
+SELECT
+  SUM(CASE WHEN pc.credit_score BETWEEN 300 AND 549 THEN 1 ELSE 0 END)::bigint AS band1,
+  SUM(CASE WHEN pc.credit_score BETWEEN 550 AND 699 THEN 1 ELSE 0 END)::bigint AS band2,
+  SUM(CASE WHEN pc.credit_score BETWEEN 700 AND 850 THEN 1 ELSE 0 END)::bigint AS band3
+FROM borrowers b
+LEFT JOIN passport_cache pc ON pc.borrower_id = b.id
+WHERE b.lender_id = $1
+`
+	var b1, b2, b3 int64
+	if err := r.pool.QueryRow(ctx, qBands, lenderID).Scan(&b1, &b2, &b3); err != nil {
+		return nil, err
+	}
+	out.ScoreBands[0].Count = b1
+	out.ScoreBands[1].Count = b2
+	out.ScoreBands[2].Count = b3
+	return out, nil
+}

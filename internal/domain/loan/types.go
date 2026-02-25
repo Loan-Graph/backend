@@ -57,6 +57,18 @@ type PortfolioAnalytics struct {
 	RepaymentRatePercent float64 `json:"repayment_rate_percent"`
 }
 
+type ScoreBand struct {
+	Label string `json:"label"`
+	Count int64  `json:"count"`
+}
+
+type PortfolioHealth struct {
+	LenderID        string      `json:"lender_id"`
+	UniqueBorrowers int64       `json:"unique_borrowers"`
+	AverageScore    float64     `json:"average_score"`
+	ScoreBands      []ScoreBand `json:"score_bands"`
+}
+
 type Repository interface {
 	Create(ctx context.Context, in CreateInput) (*Entity, error)
 	GetByID(ctx context.Context, id string) (*Entity, error)
@@ -66,4 +78,6 @@ type Repository interface {
 	RecordRepayment(ctx context.Context, loanID string, amountMinor int64) error
 	MarkDefault(ctx context.Context, loanID string) error
 	GetPortfolioAnalytics(ctx context.Context, lenderID string) (*PortfolioAnalytics, error)
+	ListByBorrower(ctx context.Context, borrowerID string, limit, offset int32) ([]Entity, error)
+	GetPortfolioHealth(ctx context.Context, lenderID string) (*PortfolioHealth, error)
 }

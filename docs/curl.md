@@ -124,3 +124,27 @@ curl -i -b cookies.txt \
 ```bash
 curl -i -b cookies.txt "$BASE_URL/v1/portfolio/analytics?lender_id=<LENDER_UUID>"
 ```
+
+## 15) Portfolio health
+
+```bash
+curl -i -b cookies.txt "$BASE_URL/v1/portfolio/health?lender_id=<LENDER_UUID>"
+```
+
+## 16) Passport snapshot by borrower hash
+
+```bash
+curl -i -b cookies.txt "$BASE_URL/v1/passport/<BORROWER_HASH_HEX>"
+```
+
+## 17) Passport history
+
+```bash
+curl -i -b cookies.txt "$BASE_URL/v1/passport/<BORROWER_HASH_HEX>/history?limit=20&offset=0"
+```
+
+## 18) Passport NFT view
+
+```bash
+curl -i -b cookies.txt "$BASE_URL/v1/passport/<BORROWER_HASH_HEX>/nft"
+```
