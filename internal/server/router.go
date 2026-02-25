@@ -52,6 +52,11 @@ func NewRouter(cfg config.Config, logger *slog.Logger, deps Dependencies) *gin.E
 			lenderGroup := r.Group("/v1")
 			lenderGroup.Use(middleware.RequireAuth(deps.JWTManager), middleware.RequireRole(auth.RoleLender, auth.RoleAdmin))
 			lenderGroup.POST("/loans/upload", deps.LoanHandler.UploadLoanBook)
+			lenderGroup.GET("/loans", deps.LoanHandler.ListLoans)
+			lenderGroup.GET("/loans/:loanId", deps.LoanHandler.GetLoan)
+			lenderGroup.POST("/loans/:loanId/repay", deps.LoanHandler.RecordRepayment)
+			lenderGroup.POST("/loans/:loanId/default", deps.LoanHandler.MarkDefault)
+			lenderGroup.GET("/portfolio/analytics", deps.LoanHandler.GetPortfolioAnalytics)
 		}
 
 		adminHandler := handlers.NewAdminHandler()

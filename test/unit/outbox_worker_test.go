@@ -59,6 +59,20 @@ func (w *fakeWriter) RegisterLoan(_ context.Context, _ string) (string, error) {
 	return w.txHash, nil
 }
 
+func (w *fakeWriter) RecordRepayment(_ context.Context, _ string, _ int64, _ string) (string, error) {
+	if w.err != nil {
+		return "", w.err
+	}
+	return w.txHash, nil
+}
+
+func (w *fakeWriter) MarkDefault(_ context.Context, _ string, _ string) (string, error) {
+	if w.err != nil {
+		return "", w.err
+	}
+	return w.txHash, nil
+}
+
 func TestWorkerRunOnceSuccess(t *testing.T) {
 	outbox := &fakeOutboxRepo{jobs: []jobs.OutboxJob{{ID: 1, Topic: "register_loan", Attempts: 1, Payload: []byte(`{"loan_id":"loan-1"}`)}}}
 	loanRepo := &fakeLoanRepo{}
@@ -98,5 +112,31 @@ func TestWorkerRunOnceTerminalFailure(t *testing.T) {
 	}
 	if len(outbox.failedIDs) != 1 || outbox.failedIDs[0] != 9 {
 		t.Fatalf("expected job marked failed")
+	}
+}
+
+func TestWorkerRunOnceRepaymentTopic(t *testing.T) {
+	outbox := &fakeOutboxRepo{jobs: []jobs.OutboxJob{{ID: 3, Topic: "record_repayment", Attempts: 1, Payload: []byte(`{"loan_id":"loan-1","amount_minor":1000,"currency":"NGN"}`)}}}
+	loanRepo := &fakeLoanRepo{}
+	worker := jobs.NewWorker(outbox, loanRepo, &fakeWriter{txHash: "0xtx"})
+
+	if err := worker.RunOnce(context.Background(), 10); err != nil {
+		t.Fatalf("run once: %v", err)
+	}
+	if len(outbox.doneIDs) != 1 || outbox.doneIDs[0] != 3 {
+		t.Fatalf("expected repayment job marked done")
+	}
+}
+
+func TestWorkerRunOnceDefaultTopic(t *testing.T) {
+	outbox := &fakeOutboxRepo{jobs: []jobs.OutboxJob{{ID: 4, Topic: "mark_default", Attempts: 1, Payload: []byte(`{"loan_id":"loan-1","reason":"late"}`)}}}
+	loanRepo := &fakeLoanRepo{}
+	worker := jobs.NewWorker(outbox, loanRepo, &fakeWriter{txHash: "0xtx"})
+
+	if err := worker.RunOnce(context.Background(), 10); err != nil {
+		t.Fatalf("run once: %v", err)
+	}
+	if len(outbox.doneIDs) != 1 || outbox.doneIDs[0] != 4 {
+		t.Fatalf("expected default job marked done")
 	}
 }

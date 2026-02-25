@@ -16,6 +16,8 @@ import (
 
 const (
 	outboxTopicRegisterLoan = "register_loan"
+	outboxTopicRepayment    = "record_repayment"
+	outboxTopicDefault      = "mark_default"
 )
 
 var expectedHeaders = []string{
@@ -38,6 +40,18 @@ type UploadResult struct {
 	LoanIDs   []string          `json:"loan_ids"`
 	Processed int               `json:"processed"`
 	Errors    []ValidationError `json:"errors"`
+}
+
+type RepaymentInput struct {
+	LoanID      string `json:"loan_id"`
+	AmountMinor int64  `json:"amount_minor"`
+	Currency    string `json:"currency"`
+}
+
+type DefaultInput struct {
+	LoanID   string `json:"loan_id"`
+	Reason   string `json:"reason"`
+	LenderID string `json:"lender_id"`
 }
 
 type BorrowerRepository interface {
@@ -141,6 +155,51 @@ func (s *Service) ProcessCSVUpload(ctx context.Context, lenderID string, csvRead
 	}
 
 	return result, nil
+}
+
+func (s *Service) ListLoans(ctx context.Context, filter ListFilter) ([]Entity, error) {
+	return s.loanRepo.List(ctx, filter)
+}
+
+func (s *Service) GetLoan(ctx context.Context, loanID string) (*Entity, error) {
+	return s.loanRepo.GetByID(ctx, loanID)
+}
+
+func (s *Service) RecordRepayment(ctx context.Context, in RepaymentInput) error {
+	if strings.TrimSpace(in.LoanID) == "" || in.AmountMinor <= 0 || len(strings.TrimSpace(in.Currency)) != 3 {
+		return fmt.Errorf("invalid_repayment_input")
+	}
+	if err := s.loanRepo.RecordRepayment(ctx, in.LoanID, in.AmountMinor); err != nil {
+		return err
+	}
+	payload, _ := json.Marshal(map[string]any{
+		"loan_id":      in.LoanID,
+		"amount_minor": in.AmountMinor,
+		"currency":     strings.ToUpper(strings.TrimSpace(in.Currency)),
+	})
+	return s.outboxRepo.Enqueue(ctx, outboxTopicRepayment, payload)
+}
+
+func (s *Service) MarkDefault(ctx context.Context, in DefaultInput) error {
+	if strings.TrimSpace(in.LoanID) == "" {
+		return fmt.Errorf("invalid_default_input")
+	}
+	if err := s.loanRepo.MarkDefault(ctx, in.LoanID); err != nil {
+		return err
+	}
+	payload, _ := json.Marshal(map[string]any{
+		"loan_id":   in.LoanID,
+		"reason":    strings.TrimSpace(in.Reason),
+		"lender_id": strings.TrimSpace(in.LenderID),
+	})
+	return s.outboxRepo.Enqueue(ctx, outboxTopicDefault, payload)
+}
+
+func (s *Service) PortfolioAnalytics(ctx context.Context, lenderID string) (*PortfolioAnalytics, error) {
+	if strings.TrimSpace(lenderID) == "" {
+		return nil, fmt.Errorf("missing_lender_id")
+	}
+	return s.loanRepo.GetPortfolioAnalytics(ctx, lenderID)
 }
 
 type rowValidationError struct {

@@ -154,3 +154,51 @@ func (r *LoanRepository) SetOnChainSubmission(ctx context.Context, loanID, txHas
 	_, err := r.pool.Exec(ctx, q, loanID, txHash, confirmed)
 	return err
 }
+
+func (r *LoanRepository) RecordRepayment(ctx context.Context, loanID string, amountMinor int64) error {
+	q := `
+UPDATE loans
+SET amount_repaid_minor = amount_repaid_minor + $2,
+    status = CASE WHEN (amount_repaid_minor + $2) >= principal_minor THEN 'repaid' ELSE status END,
+    updated_at = NOW()
+WHERE id = $1 AND status != 'defaulted'
+`
+	_, err := r.pool.Exec(ctx, q, loanID, amountMinor)
+	return err
+}
+
+func (r *LoanRepository) MarkDefault(ctx context.Context, loanID string) error {
+	q := `UPDATE loans SET status = 'defaulted', updated_at = NOW() WHERE id = $1 AND status = 'active'`
+	_, err := r.pool.Exec(ctx, q, loanID)
+	return err
+}
+
+func (r *LoanRepository) GetPortfolioAnalytics(ctx context.Context, lenderID string) (*loan.PortfolioAnalytics, error) {
+	q := `
+SELECT
+  COUNT(*)::bigint AS total_loans,
+  COUNT(*) FILTER (WHERE status = 'active')::bigint AS active_loans,
+  COUNT(*) FILTER (WHERE status = 'repaid')::bigint AS repaid_loans,
+  COUNT(*) FILTER (WHERE status = 'defaulted')::bigint AS defaulted_loans,
+  COALESCE(SUM(principal_minor), 0)::bigint AS total_principal_minor,
+  COALESCE(SUM(amount_repaid_minor), 0)::bigint AS total_repaid_minor
+FROM loans
+WHERE lender_id = $1
+`
+	out := &loan.PortfolioAnalytics{LenderID: lenderID}
+	err := r.pool.QueryRow(ctx, q, lenderID).Scan(
+		&out.TotalLoans,
+		&out.ActiveLoans,
+		&out.RepaidLoans,
+		&out.DefaultedLoans,
+		&out.TotalPrincipalMinor,
+		&out.TotalRepaidMinor,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if out.TotalPrincipalMinor > 0 {
+		out.RepaymentRatePercent = (float64(out.TotalRepaidMinor) / float64(out.TotalPrincipalMinor)) * 100
+	}
+	return out, nil
+}

@@ -88,3 +88,39 @@ curl -i -b cookies.txt \
 Expected:
 - HTTP 200 with `{ loan_ids, processed, errors: [] }` for valid CSV
 - HTTP 400 with row-level `errors` for invalid CSV rows
+
+## 10) List loans
+
+```bash
+curl -i -b cookies.txt "$BASE_URL/v1/loans?lender_id=<LENDER_UUID>&status=active&limit=20&offset=0"
+```
+
+## 11) Get loan by id
+
+```bash
+curl -i -b cookies.txt "$BASE_URL/v1/loans/<LOAN_ID>"
+```
+
+## 12) Record repayment
+
+```bash
+curl -i -b cookies.txt \
+  -H "Content-Type: application/json" \
+  -X POST "$BASE_URL/v1/loans/<LOAN_ID>/repay" \
+  -d '{"amount_minor":50000,"currency":"NGN"}'
+```
+
+## 13) Mark default
+
+```bash
+curl -i -b cookies.txt \
+  -H "Content-Type: application/json" \
+  -X POST "$BASE_URL/v1/loans/<LOAN_ID>/default" \
+  -d '{"reason":"missed scheduled payments"}'
+```
+
+## 14) Portfolio analytics
+
+```bash
+curl -i -b cookies.txt "$BASE_URL/v1/portfolio/analytics?lender_id=<LENDER_UUID>"
+```

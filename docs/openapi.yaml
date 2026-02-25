@@ -101,3 +101,95 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden (insufficient role)
+  /v1/loans:
+    get:
+      summary: List loans for a lender
+      parameters:
+        - in: query
+          name: lender_id
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: risk_grade
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Loan list
+  /v1/loans/{loanId}:
+    get:
+      summary: Get a single loan by id
+      parameters:
+        - in: path
+          name: loanId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Loan object
+        '404':
+          description: Loan not found
+  /v1/loans/{loanId}/repay:
+    post:
+      summary: Record a loan repayment and enqueue on-chain sync job
+      parameters:
+        - in: path
+          name: loanId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount_minor, currency]
+              properties:
+                amount_minor: { type: integer }
+                currency: { type: string }
+      responses:
+        '200':
+          description: Repayment accepted
+        '400':
+          description: Invalid repayment request
+  /v1/loans/{loanId}/default:
+    post:
+      summary: Mark a loan default and enqueue on-chain sync job
+      parameters:
+        - in: path
+          name: loanId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: Default accepted
+        '400':
+          description: Invalid default request
+  /v1/portfolio/analytics:
+    get:
+      summary: Portfolio analytics for a lender
+      parameters:
+        - in: query
+          name: lender_id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Portfolio analytics response
+        '400':
+          description: Invalid request
