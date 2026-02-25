@@ -64,6 +64,10 @@ func (m *loanRepoMock) List(_ context.Context, _ loandomain.ListFilter) ([]loand
 	return m.items, nil
 }
 
+func (m *loanRepoMock) SetOnChainSubmission(_ context.Context, _ string, _ string, _ bool) error {
+	return nil
+}
+
 type outboxRepoMock struct {
 	topics []string
 }

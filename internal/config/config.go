@@ -33,6 +33,9 @@ type Config struct {
 
 	AuthEnableBearer          bool
 	AuthBootstrapAdminSubject string
+
+	WorkerPollInterval time.Duration
+	WorkerBatchSize    int32
 }
 
 func Load() Config {
@@ -62,6 +65,9 @@ func Load() Config {
 
 		AuthEnableBearer:          getEnvBool("AUTH_ENABLE_BEARER", false),
 		AuthBootstrapAdminSubject: getEnv("AUTH_BOOTSTRAP_ADMIN_SUBJECT", ""),
+
+		WorkerPollInterval: getEnvDuration("WORKER_POLL_INTERVAL", 2*time.Second),
+		WorkerBatchSize:    getEnvInt32("WORKER_BATCH_SIZE", 20),
 	}
 }
 

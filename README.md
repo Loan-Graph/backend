@@ -64,6 +64,7 @@ From `backend/`:
 
 ```bash
 make run
+make run-worker
 make test
 make tidy
 make migrate-up
@@ -82,3 +83,4 @@ make compose-down
 - No AWS/S3 integrations are included in this phase.
 - Transport is cookie-first for web (`HttpOnly` auth cookies).
 - Bearer-token transport is reserved for the mobile phase.
+- Outbox worker processes queued chain jobs from `outbox_jobs` (`make run-worker`).
