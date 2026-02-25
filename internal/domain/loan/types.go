@@ -51,4 +51,5 @@ type Repository interface {
 	GetByID(ctx context.Context, id string) (*Entity, error)
 	GetByHash(ctx context.Context, loanHash []byte) (*Entity, error)
 	List(ctx context.Context, f ListFilter) ([]Entity, error)
+	SetOnChainSubmission(ctx context.Context, loanID, txHash string, confirmed bool) error
 }

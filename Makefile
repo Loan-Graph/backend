@@ -1,9 +1,10 @@
 SHELL := /bin/bash
 
-.PHONY: help run test tidy fmt vet migrate-up migrate-down compose-up compose-down
+.PHONY: help run run-worker test tidy fmt vet migrate-up migrate-down compose-up compose-down
 
 help:
 	@echo "make run           - run API locally"
+	@echo "make run-worker    - run outbox worker locally"
 	@echo "make test          - run go tests"
 	@echo "make tidy          - go mod tidy"
 	@echo "make fmt           - format go files"
@@ -15,6 +16,9 @@ help:
 
 run:
 	go run ./cmd/api
+
+run-worker:
+	go run ./cmd/worker
 
 test:
 	go test ./...

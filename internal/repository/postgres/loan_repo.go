@@ -148,3 +148,9 @@ WHERE 1=1`)
 	}
 	return out, nil
 }
+
+func (r *LoanRepository) SetOnChainSubmission(ctx context.Context, loanID, txHash string, confirmed bool) error {
+	q := `UPDATE loans SET on_chain_tx = $2, on_chain_confirmed = $3, updated_at = NOW() WHERE id = $1`
+	_, err := r.pool.Exec(ctx, q, loanID, txHash, confirmed)
+	return err
+}

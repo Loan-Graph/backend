@@ -75,3 +75,16 @@ curl -i -b cookies.txt "$BASE_URL/admin/system/health"
 Expected:
 - HTTP 200 for admin user
 - HTTP 403 for non-admin user
+
+## 9) Upload loan CSV (requires lender/admin role)
+
+```bash
+curl -i -b cookies.txt \
+  -X POST "$BASE_URL/v1/loans/upload" \
+  -F "lender_id=<LENDER_UUID>" \
+  -F "file=@./sample-loans.csv;type=text/csv"
+```
+
+Expected:
+- HTTP 200 with `{ loan_ids, processed, errors: [] }` for valid CSV
+- HTTP 400 with row-level `errors` for invalid CSV rows

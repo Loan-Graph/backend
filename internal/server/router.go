@@ -15,6 +15,7 @@ import (
 type Dependencies struct {
 	Pinger      handlers.Pinger
 	AuthHandler *handlers.AuthHandler
+	LoanHandler *handlers.LoanHandler
 	JWTManager  *auth.JWTManager
 }
 
@@ -46,6 +47,12 @@ func NewRouter(cfg config.Config, logger *slog.Logger, deps Dependencies) *gin.E
 		protected := authGroup.Group("")
 		protected.Use(middleware.RequireAuth(deps.JWTManager))
 		protected.GET("/me", deps.AuthHandler.Me)
+
+		if deps.LoanHandler != nil {
+			lenderGroup := r.Group("/v1")
+			lenderGroup.Use(middleware.RequireAuth(deps.JWTManager), middleware.RequireRole(auth.RoleLender, auth.RoleAdmin))
+			lenderGroup.POST("/loans/upload", deps.LoanHandler.UploadLoanBook)
+		}
 
 		adminHandler := handlers.NewAdminHandler()
 		adminGroup := r.Group("/admin")

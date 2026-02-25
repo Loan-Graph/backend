@@ -12,8 +12,10 @@ import (
 	"github.com/loangraph/backend/internal/auth"
 	"github.com/loangraph/backend/internal/config"
 	"github.com/loangraph/backend/internal/db"
+	loandomain "github.com/loangraph/backend/internal/domain/loan"
 	"github.com/loangraph/backend/internal/http/handlers"
 	"github.com/loangraph/backend/internal/observability"
+	postgresrepo "github.com/loangraph/backend/internal/repository/postgres"
 	"github.com/loangraph/backend/internal/server"
 )
 
@@ -36,8 +38,19 @@ func main() {
 	privyVerifier := auth.NewPrivyTokenVerifier(cfg.PrivyIssuer, cfg.PrivyAudience, cfg.PrivyVerificationKey, cfg.PrivyJWKSURL)
 	authService := auth.NewService(authRepo, jwtManager, privyVerifier, cfg.JWTAccessTTL, cfg.JWTRefreshTTL, cfg.AuthBootstrapAdminSubject)
 	authHandler := handlers.NewAuthHandler(authService, auth.CookieConfig{Domain: cfg.CookieDomain, Secure: cfg.CookieSecure}, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+	loanService := loandomain.NewService(
+		postgresrepo.NewBorrowerRepository(pool),
+		postgresrepo.NewLoanRepository(pool),
+		postgresrepo.NewOutboxRepository(pool),
+	)
+	loanHandler := handlers.NewLoanHandler(loanService)
 
-	r := server.NewRouter(cfg, logger, server.Dependencies{Pinger: pool, AuthHandler: authHandler, JWTManager: jwtManager})
+	r := server.NewRouter(cfg, logger, server.Dependencies{
+		Pinger:      pool,
+		AuthHandler: authHandler,
+		LoanHandler: loanHandler,
+		JWTManager:  jwtManager,
+	})
 	httpServer := &http.Server{
 		Addr:              cfg.Addr(),
 		Handler:           r,

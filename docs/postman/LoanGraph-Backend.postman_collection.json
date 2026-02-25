@@ -58,6 +58,20 @@
         "method": "POST",
         "url": { "raw": "{{base_url}}/v1/auth/logout", "host": ["{{base_url}}"], "path": ["v1", "auth", "logout"] }
       }
+    },
+    {
+      "name": "Loans - Upload CSV",
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "lender_id", "value": "{{lender_id}}", "type": "text" },
+            { "key": "file", "type": "file", "src": "" }
+          ]
+        },
+        "url": { "raw": "{{base_url}}/v1/loans/upload", "host": ["{{base_url}}"], "path": ["v1", "loans", "upload"] }
+      }
     }
   ]
 }

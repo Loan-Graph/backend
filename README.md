@@ -53,6 +53,9 @@ curl http://localhost:8090/v1/meta
 ## Admin Endpoint (Role-Protected)
 - `GET /admin/system/health` (requires `role=admin` in backend auth token)
 
+## Loan Upload Endpoint
+- `POST /v1/loans/upload` (requires `role=lender|admin`, multipart CSV with `lender_id` + `file`)
+
 ## Auth Role Bootstrap
 - Set `AUTH_BOOTSTRAP_ADMIN_SUBJECT=<privy subject>` in `.env` to promote that Privy subject to admin at login time.
 
@@ -61,6 +64,7 @@ From `backend/`:
 
 ```bash
 make run
+make run-worker
 make test
 make tidy
 make migrate-up
@@ -79,3 +83,4 @@ make compose-down
 - No AWS/S3 integrations are included in this phase.
 - Transport is cookie-first for web (`HttpOnly` auth cookies).
 - Bearer-token transport is reserved for the mobile phase.
+- Outbox worker processes queued chain jobs from `outbox_jobs` (`make run-worker`).
