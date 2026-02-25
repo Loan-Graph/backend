@@ -13,10 +13,11 @@ import (
 )
 
 type Dependencies struct {
-	Pinger      handlers.Pinger
-	AuthHandler *handlers.AuthHandler
-	LoanHandler *handlers.LoanHandler
-	JWTManager  *auth.JWTManager
+	Pinger          handlers.Pinger
+	AuthHandler     *handlers.AuthHandler
+	LoanHandler     *handlers.LoanHandler
+	PassportHandler *handlers.PassportHandler
+	JWTManager      *auth.JWTManager
 }
 
 func NewRouter(cfg config.Config, logger *slog.Logger, deps Dependencies) *gin.Engine {
@@ -57,6 +58,14 @@ func NewRouter(cfg config.Config, logger *slog.Logger, deps Dependencies) *gin.E
 			lenderGroup.POST("/loans/:loanId/repay", deps.LoanHandler.RecordRepayment)
 			lenderGroup.POST("/loans/:loanId/default", deps.LoanHandler.MarkDefault)
 			lenderGroup.GET("/portfolio/analytics", deps.LoanHandler.GetPortfolioAnalytics)
+		}
+		if deps.PassportHandler != nil {
+			passportGroup := r.Group("/v1")
+			passportGroup.Use(middleware.RequireAuth(deps.JWTManager), middleware.RequireRole(auth.RoleLender, auth.RoleAdmin, auth.RoleInvestor))
+			passportGroup.GET("/passport/:borrowerHash", deps.PassportHandler.GetPassport)
+			passportGroup.GET("/passport/:borrowerHash/history", deps.PassportHandler.GetPassportHistory)
+			passportGroup.GET("/passport/:borrowerHash/nft", deps.PassportHandler.GetPassportNFT)
+			passportGroup.GET("/portfolio/health", deps.PassportHandler.GetPortfolioHealth)
 		}
 
 		adminHandler := handlers.NewAdminHandler()

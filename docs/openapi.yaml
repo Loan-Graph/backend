@@ -193,3 +193,61 @@ paths:
           description: Portfolio analytics response
         '400':
           description: Invalid request
+  /v1/portfolio/health:
+    get:
+      summary: Portfolio health (score distribution) for a lender
+      parameters:
+        - in: query
+          name: lender_id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Portfolio health response
+        '400':
+          description: Invalid request
+  /v1/passport/{borrowerHash}:
+    get:
+      summary: Get borrower passport cache by borrower hash
+      parameters:
+        - in: path
+          name: borrowerHash
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Passport response
+        '404':
+          description: Passport not found
+  /v1/passport/{borrowerHash}/history:
+    get:
+      summary: Get borrower loan history by borrower hash
+      parameters:
+        - in: path
+          name: borrowerHash
+          required: true
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Loan history response
+        '404':
+          description: Borrower history not found
+  /v1/passport/{borrowerHash}/nft:
+    get:
+      summary: Get borrower passport NFT metadata response
+      parameters:
+        - in: path
+          name: borrowerHash
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Passport NFT response
+        '404':
+          description: Passport NFT not found

@@ -13,6 +13,7 @@ import (
 	"github.com/loangraph/backend/internal/config"
 	"github.com/loangraph/backend/internal/db"
 	loandomain "github.com/loangraph/backend/internal/domain/loan"
+	passportdomain "github.com/loangraph/backend/internal/domain/passport"
 	"github.com/loangraph/backend/internal/http/handlers"
 	"github.com/loangraph/backend/internal/observability"
 	postgresrepo "github.com/loangraph/backend/internal/repository/postgres"
@@ -44,12 +45,19 @@ func main() {
 		postgresrepo.NewOutboxRepository(pool),
 	)
 	loanHandler := handlers.NewLoanHandler(loanService)
+	passportService := passportdomain.NewService(
+		postgresrepo.NewBorrowerRepository(pool),
+		postgresrepo.NewPassportRepository(pool),
+		postgresrepo.NewLoanRepository(pool),
+	)
+	passportHandler := handlers.NewPassportHandler(passportService)
 
 	r := server.NewRouter(cfg, logger, server.Dependencies{
-		Pinger:      pool,
-		AuthHandler: authHandler,
-		LoanHandler: loanHandler,
-		JWTManager:  jwtManager,
+		Pinger:          pool,
+		AuthHandler:     authHandler,
+		LoanHandler:     loanHandler,
+		PassportHandler: passportHandler,
+		JWTManager:      jwtManager,
 	})
 	httpServer := &http.Server{
 		Addr:              cfg.Addr(),

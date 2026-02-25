@@ -2,58 +2,28 @@
   "info": {
     "name": "LoanGraph Backend",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Backend endpoints including Privy bootstrap auth and JWT cookie session flows"
+    "description": "Backend endpoints including auth, loans lifecycle, portfolio, passport, worker/indexer-backed projections"
   },
   "item": [
     {"name":"Health","request":{"method":"GET","url":{"raw":"{{base_url}}/health","host":["{{base_url}}"],"path":["health"]}}},
     {"name":"Ready","request":{"method":"GET","url":{"raw":"{{base_url}}/ready","host":["{{base_url}}"],"path":["ready"]}}},
     {"name":"Meta","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/meta","host":["{{base_url}}"],"path":["v1","meta"]}}},
-    {
-      "name": "Auth - Privy Login",
-      "request": {
-        "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"privy_access_token\": \"{{privy_access_token}}\"\n}" },
-        "url": { "raw": "{{base_url}}/v1/auth/privy/login", "host": ["{{base_url}}"], "path": ["v1", "auth", "privy", "login"] }
-      }
-    },
+    {"name":"Auth - Privy Login","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"privy_access_token\": \"{{privy_access_token}}\"\n}"},"url":{"raw":"{{base_url}}/v1/auth/privy/login","host":["{{base_url}}"],"path":["v1","auth","privy","login"]}}},
     {"name":"Auth - Me","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/auth/me","host":["{{base_url}}"],"path":["v1","auth","me"]}}},
     {"name":"Auth - Refresh","request":{"method":"POST","url":{"raw":"{{base_url}}/v1/auth/refresh","host":["{{base_url}}"],"path":["v1","auth","refresh"]}}},
     {"name":"Auth - Logout","request":{"method":"POST","url":{"raw":"{{base_url}}/v1/auth/logout","host":["{{base_url}}"],"path":["v1","auth","logout"]}}},
-    {
-      "name": "Loans - Upload CSV",
-      "request": {
-        "method": "POST",
-        "body": {
-          "mode": "formdata",
-          "formdata": [
-            { "key": "lender_id", "value": "{{lender_id}}", "type": "text" },
-            { "key": "file", "type": "file", "src": "" }
-          ]
-        },
-        "url": { "raw": "{{base_url}}/v1/loans/upload", "host": ["{{base_url}}"], "path": ["v1", "loans", "upload"] }
-      }
-    },
+
+    {"name":"Loans - Upload CSV","request":{"method":"POST","body":{"mode":"formdata","formdata":[{"key":"lender_id","value":"{{lender_id}}","type":"text"},{"key":"file","type":"file","src":""}]},"url":{"raw":"{{base_url}}/v1/loans/upload","host":["{{base_url}}"],"path":["v1","loans","upload"]}}},
     {"name":"Loans - List","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/loans?lender_id={{lender_id}}","host":["{{base_url}}"],"path":["v1","loans"],"query":[{"key":"lender_id","value":"{{lender_id}}"}]}}},
     {"name":"Loans - Get","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/loans/{{loan_id}}","host":["{{base_url}}"],"path":["v1","loans","{{loan_id}}"]}}},
-    {
-      "name": "Loans - Repay",
-      "request": {
-        "method": "POST",
-        "header": [{"key":"Content-Type","value":"application/json"}],
-        "body": {"mode":"raw","raw":"{\n  \"amount_minor\": 50000,\n  \"currency\": \"NGN\"\n}"},
-        "url": {"raw":"{{base_url}}/v1/loans/{{loan_id}}/repay","host":["{{base_url}}"],"path":["v1","loans","{{loan_id}}","repay"]}
-      }
-    },
-    {
-      "name": "Loans - Default",
-      "request": {
-        "method": "POST",
-        "header": [{"key":"Content-Type","value":"application/json"}],
-        "body": {"mode":"raw","raw":"{\n  \"reason\": \"missed scheduled payments\"\n}"},
-        "url": {"raw":"{{base_url}}/v1/loans/{{loan_id}}/default","host":["{{base_url}}"],"path":["v1","loans","{{loan_id}}","default"]}
-      }
-    },
-    {"name":"Portfolio - Analytics","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/portfolio/analytics?lender_id={{lender_id}}","host":["{{base_url}}"],"path":["v1","portfolio","analytics"],"query":[{"key":"lender_id","value":"{{lender_id}}"}]}}}
+    {"name":"Loans - Repay","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"amount_minor\": 50000,\n  \"currency\": \"NGN\"\n}"},"url":{"raw":"{{base_url}}/v1/loans/{{loan_id}}/repay","host":["{{base_url}}"],"path":["v1","loans","{{loan_id}}","repay"]}}},
+    {"name":"Loans - Default","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"reason\": \"missed scheduled payments\"\n}"},"url":{"raw":"{{base_url}}/v1/loans/{{loan_id}}/default","host":["{{base_url}}"],"path":["v1","loans","{{loan_id}}","default"]}}},
+
+    {"name":"Portfolio - Analytics","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/portfolio/analytics?lender_id={{lender_id}}","host":["{{base_url}}"],"path":["v1","portfolio","analytics"],"query":[{"key":"lender_id","value":"{{lender_id}}"}]}}},
+    {"name":"Portfolio - Health","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/portfolio/health?lender_id={{lender_id}}","host":["{{base_url}}"],"path":["v1","portfolio","health"],"query":[{"key":"lender_id","value":"{{lender_id}}"}]}}},
+
+    {"name":"Passport - Snapshot","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/passport/{{borrower_hash}}","host":["{{base_url}}"],"path":["v1","passport","{{borrower_hash}}"]}}},
+    {"name":"Passport - History","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/passport/{{borrower_hash}}/history?limit=20&offset=0","host":["{{base_url}}"],"path":["v1","passport","{{borrower_hash}}","history"],"query":[{"key":"limit","value":"20"},{"key":"offset","value":"0"}]}}},
+    {"name":"Passport - NFT","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/passport/{{borrower_hash}}/nft","host":["{{base_url}}"],"path":["v1","passport","{{borrower_hash}}","nft"]}}}
   ]
 }
