@@ -100,8 +100,8 @@ func TestAuthLoginSetsCookies(t *testing.T) {
 	jwtManager := auth.NewJWTManager("issuer", "aud", "super-secret")
 	svc := auth.NewService(repo, jwtManager, fakeVerifier{}, 15*time.Minute, 24*time.Hour, "")
 	h := handlers.NewAuthHandler(svc, auth.CookieConfig{}, 15*time.Minute, 24*time.Hour)
-
-	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), server.Dependencies{AuthHandler: h, JWTManager: jwtManager})
+	adminHandler := handlers.NewAdminHandler(nil)
+	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), server.Dependencies{AuthHandler: h, AdminHandler: adminHandler, JWTManager: jwtManager})
 
 	body, _ := json.Marshal(map[string]string{"privy_access_token": "token"})
 	req := httptest.NewRequest(http.MethodPost, "/v1/auth/privy/login", bytes.NewReader(body))
@@ -125,7 +125,8 @@ func TestAdminEndpointRequiresAdminRole(t *testing.T) {
 	jwtManager := auth.NewJWTManager("issuer", "aud", "super-secret")
 	svc := auth.NewService(repo, jwtManager, fakeVerifier{}, 15*time.Minute, 24*time.Hour, "")
 	h := handlers.NewAuthHandler(svc, auth.CookieConfig{}, 15*time.Minute, 24*time.Hour)
-	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), server.Dependencies{AuthHandler: h, JWTManager: jwtManager})
+	adminHandler := handlers.NewAdminHandler(nil)
+	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), server.Dependencies{AuthHandler: h, AdminHandler: adminHandler, JWTManager: jwtManager})
 
 	loginBody, _ := json.Marshal(map[string]string{"privy_access_token": "token"})
 	loginReq := httptest.NewRequest(http.MethodPost, "/v1/auth/privy/login", bytes.NewReader(loginBody))
@@ -164,7 +165,8 @@ func TestBootstrapAdminCanAccessAdminEndpoint(t *testing.T) {
 	subject := "did:privy:test-user"
 	svc := auth.NewService(repo, jwtManager, fakeVerifier{}, 15*time.Minute, 24*time.Hour, subject)
 	h := handlers.NewAuthHandler(svc, auth.CookieConfig{}, 15*time.Minute, 24*time.Hour)
-	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), server.Dependencies{AuthHandler: h, JWTManager: jwtManager})
+	adminHandler := handlers.NewAdminHandler(nil)
+	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), server.Dependencies{AuthHandler: h, AdminHandler: adminHandler, JWTManager: jwtManager})
 
 	loginBody, _ := json.Marshal(map[string]string{"privy_access_token": "token"})
 	loginReq := httptest.NewRequest(http.MethodPost, "/v1/auth/privy/login", bytes.NewReader(loginBody))

@@ -18,6 +18,7 @@ type Dependencies struct {
 	LoanHandler     *handlers.LoanHandler
 	PassportHandler *handlers.PassportHandler
 	InvestorHandler *handlers.InvestorHandler
+	AdminHandler    *handlers.AdminHandler
 	JWTManager      *auth.JWTManager
 }
 
@@ -77,10 +78,13 @@ func NewRouter(cfg config.Config, logger *slog.Logger, deps Dependencies) *gin.E
 			investorGroup.GET("/lenders/:lenderId/profile", deps.InvestorHandler.GetLenderProfile)
 		}
 
-		adminHandler := handlers.NewAdminHandler()
-		adminGroup := r.Group("/admin")
-		adminGroup.Use(middleware.RequireAuth(deps.JWTManager), middleware.RequireRole(auth.RoleAdmin))
-		adminGroup.GET("/system/health", adminHandler.SystemHealth)
+		if deps.AdminHandler != nil {
+			adminGroup := r.Group("/admin")
+			adminGroup.Use(middleware.RequireAuth(deps.JWTManager), middleware.RequireRole(auth.RoleAdmin))
+			adminGroup.GET("/system/health", deps.AdminHandler.SystemHealth)
+			adminGroup.POST("/lenders", deps.AdminHandler.OnboardLender)
+			adminGroup.PATCH("/lenders/:lenderId/status", deps.AdminHandler.UpdateLenderStatus)
+		}
 	}
 
 	r.NoRoute(func(c *gin.Context) {

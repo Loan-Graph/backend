@@ -28,4 +28,5 @@ type Repository interface {
 	Create(ctx context.Context, in CreateInput) (*Entity, error)
 	GetByID(ctx context.Context, id string) (*Entity, error)
 	GetByWallet(ctx context.Context, walletAddress string) (*Entity, error)
+	UpdateKYCStatus(ctx context.Context, lenderID, kycStatus string) error
 }
