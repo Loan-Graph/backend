@@ -366,3 +366,13 @@ paths:
           description: Lender profile response
         '404':
           description: Lender not found
+  /v1/ws:
+    get:
+      summary: WebSocket endpoint (authenticated) for realtime subscriptions
+      description: |
+        Upgrade connection to websocket and subscribe using messages like:
+        {"action":"subscribe","channel":"pool:repayments","poolId":"<POOL_ID>"}
+        {"action":"subscribe","channel":"lender:portfolio","lenderId":"<LENDER_ID>"}
+      responses:
+        '101':
+          description: Switching Protocols

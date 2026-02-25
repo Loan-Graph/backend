@@ -30,6 +30,7 @@
     {"name":"Pools - Get","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/pools/{{pool_id}}","host":["{{base_url}}"],"path":["v1","pools","{{pool_id}}"]}}},
     {"name":"Pools - Performance","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/pools/{{pool_id}}/performance?days=30","host":["{{base_url}}"],"path":["v1","pools","{{pool_id}}","performance"],"query":[{"key":"days","value":"30"}]}}},
     {"name":"Lenders - Profile","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/lenders/{{lender_id}}/profile","host":["{{base_url}}"],"path":["v1","lenders","{{lender_id}}","profile"]}}},
+    {"name":"WebSocket - Upgrade URL","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/ws","host":["{{base_url}}"],"path":["v1","ws"]}}},
 
     {"name":"Admin - System Health","request":{"method":"GET","url":{"raw":"{{base_url}}/admin/system/health","host":["{{base_url}}"],"path":["admin","system","health"]}}},
     {"name":"Admin - Onboard Lender","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"name\": \"New Lender\",\n  \"country_code\": \"NG\",\n  \"wallet_address\": \"0x8888888888888888888888888888888888888888\"\n}"},"url":{"raw":"{{base_url}}/admin/lenders","host":["{{base_url}}"],"path":["admin","lenders"]}}},

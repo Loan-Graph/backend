@@ -20,6 +20,7 @@ import (
 	"github.com/loangraph/backend/internal/observability"
 	postgresrepo "github.com/loangraph/backend/internal/repository/postgres"
 	"github.com/loangraph/backend/internal/server"
+	"github.com/loangraph/backend/internal/ws"
 )
 
 func main() {
@@ -64,6 +65,8 @@ func main() {
 		postgresrepo.NewAdminAuditRepository(pool),
 	)
 	adminHandler := handlers.NewAdminHandler(adminService)
+	hub := ws.NewHub()
+	wsHandler := ws.NewHandler(hub)
 
 	r := server.NewRouter(cfg, logger, server.Dependencies{
 		Pinger:          pool,
@@ -72,6 +75,7 @@ func main() {
 		PassportHandler: passportHandler,
 		InvestorHandler: investorHandler,
 		AdminHandler:    adminHandler,
+		WSHandler:       wsHandler,
 		JWTManager:      jwtManager,
 	})
 	httpServer := &http.Server{
@@ -88,9 +92,21 @@ func main() {
 		}
 	}()
 
+	notifierCtx, notifierCancel := context.WithCancel(context.Background())
+	if cfg.WSEnabled {
+		wsRepo := postgresrepo.NewWSRepository(pool)
+		notifier := ws.NewNotifier(wsRepo, hub, cfg.WSPollInterval)
+		go func() {
+			if err := notifier.Run(notifierCtx); err != nil && !errors.Is(err, context.Canceled) {
+				logger.Error("ws notifier failed", "err", err)
+			}
+		}()
+	}
+
 	sigCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	<-sigCtx.Done()
+	notifierCancel()
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownCancel()
