@@ -10,6 +10,7 @@ import (
 	"github.com/loangraph/backend/internal/http/handlers"
 	"github.com/loangraph/backend/internal/http/middleware"
 	"github.com/loangraph/backend/internal/version"
+	"github.com/loangraph/backend/internal/ws"
 )
 
 type Dependencies struct {
@@ -19,6 +20,7 @@ type Dependencies struct {
 	PassportHandler *handlers.PassportHandler
 	InvestorHandler *handlers.InvestorHandler
 	AdminHandler    *handlers.AdminHandler
+	WSHandler       *ws.Handler
 	JWTManager      *auth.JWTManager
 }
 
@@ -50,6 +52,11 @@ func NewRouter(cfg config.Config, logger *slog.Logger, deps Dependencies) *gin.E
 		protected := authGroup.Group("")
 		protected.Use(middleware.RequireAuth(deps.JWTManager))
 		protected.GET("/me", deps.AuthHandler.Me)
+		if deps.WSHandler != nil {
+			wsGroup := r.Group("/v1")
+			wsGroup.Use(middleware.RequireAuth(deps.JWTManager), middleware.RequireRole(auth.RoleLender, auth.RoleAdmin, auth.RoleInvestor))
+			wsGroup.GET("/ws", deps.WSHandler.HandleWebSocket)
+		}
 
 		if deps.LoanHandler != nil {
 			lenderGroup := r.Group("/v1")

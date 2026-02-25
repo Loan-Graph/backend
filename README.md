@@ -70,6 +70,7 @@ curl http://localhost:8090/v1/meta
 - `GET /v1/lenders/:lenderId/profile`
 - `POST /admin/lenders`
 - `PATCH /admin/lenders/:lenderId/status`
+- `GET /v1/ws` (websocket upgrade)
 
 ## Auth Role Bootstrap
 - Set `AUTH_BOOTSTRAP_ADMIN_SUBJECT=<privy subject>` in `.env` to promote that Privy subject to admin at login time.
@@ -101,3 +102,4 @@ make compose-down
 - Bearer-token transport is reserved for the mobile phase.
 - Outbox worker processes queued chain jobs from `outbox_jobs` (`make run-worker`).
 - Indexer processes `chain_events` and applies DB projections (`make run-indexer`).
+- WebSocket hub streams pool repayment and lender portfolio events from DB-polled notifier.

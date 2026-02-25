@@ -190,3 +190,21 @@ curl -i -b cookies.txt \
   -X PATCH "$BASE_URL/admin/lenders/<LENDER_ID>/status" \
   -d '{"kyc_status":"approved"}'
 ```
+
+## 25) WebSocket subscriptions
+
+Using `wscat` (or Postman WebSocket):
+
+```bash
+wscat -c "ws://localhost:8090/v1/ws" -H "Cookie: $(grep lg_access cookies.txt | awk '{print $6\"=\"$7}')"
+```
+
+Then subscribe:
+
+```json
+{"action":"subscribe","channel":"pool:repayments","poolId":"<POOL_ID>"}
+```
+
+```json
+{"action":"subscribe","channel":"lender:portfolio","lenderId":"<LENDER_ID>"}
+```

@@ -38,6 +38,8 @@ type Config struct {
 	WorkerBatchSize     int32
 	IndexerPollInterval time.Duration
 	IndexerBatchSize    int32
+	WSEnabled           bool
+	WSPollInterval      time.Duration
 }
 
 func Load() Config {
@@ -72,6 +74,8 @@ func Load() Config {
 		WorkerBatchSize:     getEnvInt32("WORKER_BATCH_SIZE", 20),
 		IndexerPollInterval: getEnvDuration("INDEXER_POLL_INTERVAL", 2*time.Second),
 		IndexerBatchSize:    getEnvInt32("INDEXER_BATCH_SIZE", 100),
+		WSEnabled:           getEnvBool("WS_ENABLED", true),
+		WSPollInterval:      getEnvDuration("WS_POLL_INTERVAL", 2*time.Second),
 	}
 }
 
