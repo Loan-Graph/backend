@@ -31,6 +31,7 @@ func NewRouter(cfg config.Config, logger *slog.Logger, deps Dependencies) *gin.E
 
 	r := gin.New()
 	r.Use(gin.Recovery())
+	r.Use(middleware.RequestBodyLimit(cfg.MaxRequestBodyBytes))
 	r.Use(func(c *gin.Context) {
 		logger.Info("request", "method", c.Request.Method, "path", c.Request.URL.Path)
 		c.Next()

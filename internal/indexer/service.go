@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type ChainEvent struct {
@@ -65,6 +67,9 @@ func (s *Service) processEvent(ctx context.Context, ev ChainEvent) error {
 		if strings.TrimSpace(payload.LoanID) == "" {
 			return fmt.Errorf("missing loan_id in LoanRegistered")
 		}
+		if !isUUID(payload.LoanID) {
+			return nil
+		}
 		return s.projRepo.ApplyLoanRegistered(ctx, payload.LoanID, ev.TXHash)
 
 	case "RepaymentRecorded":
@@ -77,6 +82,9 @@ func (s *Service) processEvent(ctx context.Context, ev ChainEvent) error {
 		}
 		if strings.TrimSpace(payload.LoanID) == "" || payload.AmountMinor <= 0 {
 			return fmt.Errorf("invalid RepaymentRecorded payload values")
+		}
+		if !isUUID(payload.LoanID) {
+			return nil
 		}
 		if err := s.projRepo.ApplyRepayment(ctx, payload.LoanID, payload.AmountMinor); err != nil {
 			return err
@@ -93,6 +101,9 @@ func (s *Service) processEvent(ctx context.Context, ev ChainEvent) error {
 		if strings.TrimSpace(payload.LoanID) == "" {
 			return fmt.Errorf("missing loan_id in LoanDefaulted")
 		}
+		if !isUUID(payload.LoanID) {
+			return nil
+		}
 		if err := s.projRepo.ApplyDefault(ctx, payload.LoanID); err != nil {
 			return err
 		}
@@ -101,4 +112,9 @@ func (s *Service) processEvent(ctx context.Context, ev ChainEvent) error {
 	default:
 		return nil
 	}
+}
+
+func isUUID(raw string) bool {
+	_, err := uuid.Parse(strings.TrimSpace(raw))
+	return err == nil
 }

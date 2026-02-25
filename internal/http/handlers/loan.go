@@ -101,6 +101,10 @@ func (h *LoanHandler) GetLoan(c *gin.Context) {
 
 func (h *LoanHandler) RecordRepayment(c *gin.Context) {
 	loanID := strings.TrimSpace(c.Param("loanId"))
+	if loanID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_request"})
+		return
+	}
 	var req struct {
 		AmountMinor int64  `json:"amount_minor"`
 		Currency    string `json:"currency"`
@@ -122,6 +126,10 @@ func (h *LoanHandler) RecordRepayment(c *gin.Context) {
 
 func (h *LoanHandler) MarkDefault(c *gin.Context) {
 	loanID := strings.TrimSpace(c.Param("loanId"))
+	if loanID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_request"})
+		return
+	}
 	var req struct {
 		Reason string `json:"reason"`
 	}

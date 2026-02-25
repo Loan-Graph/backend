@@ -82,4 +82,18 @@ func TestAdminRoutesRequireAdminRoleAndWork(t *testing.T) {
 	if statusW.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", statusW.Code)
 	}
+
+	invalidBody, _ := json.Marshal(map[string]any{
+		"name":           "Bad Lender",
+		"country_code":   "N",
+		"wallet_address": "not-an-address",
+	})
+	invalidReq := httptest.NewRequest(http.MethodPost, "/admin/lenders", bytes.NewReader(invalidBody))
+	invalidReq.Header.Set("Content-Type", "application/json")
+	invalidReq.AddCookie(accessCookie)
+	invalidW := httptest.NewRecorder()
+	r.ServeHTTP(invalidW, invalidReq)
+	if invalidW.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid admin onboard payload, got %d", invalidW.Code)
+	}
 }
