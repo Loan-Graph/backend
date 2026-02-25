@@ -39,6 +39,17 @@ services:
       postgres:
         condition: service_healthy
 
+  indexer:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: ["/app/indexer"]
+    env_file:
+      - ./backend/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   migrate:
     image: migrate/migrate:v4.17.1
     volumes:
