@@ -55,6 +55,11 @@ curl http://localhost:8090/v1/meta
 
 ## Loan Upload Endpoint
 - `POST /v1/loans/upload` (requires `role=lender|admin`, multipart CSV with `lender_id` + `file`)
+- `GET /v1/loans`
+- `GET /v1/loans/:loanId`
+- `POST /v1/loans/:loanId/repay`
+- `POST /v1/loans/:loanId/default`
+- `GET /v1/portfolio/analytics`
 
 ## Auth Role Bootstrap
 - Set `AUTH_BOOTSTRAP_ADMIN_SUBJECT=<privy subject>` in `.env` to promote that Privy subject to admin at login time.

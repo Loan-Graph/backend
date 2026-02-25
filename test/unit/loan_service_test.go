@@ -30,7 +30,10 @@ func (m *borrowerRepoMock) Create(_ context.Context, in borrowerdomain.CreateInp
 }
 
 type loanRepoMock struct {
-	items []loandomain.Entity
+	items             []loandomain.Entity
+	recordRepaymentID string
+	recordAmount      int64
+	defaultLoanID     string
 }
 
 func (m *loanRepoMock) Create(_ context.Context, in loandomain.CreateInput) (*loandomain.Entity, error) {
@@ -66,6 +69,21 @@ func (m *loanRepoMock) List(_ context.Context, _ loandomain.ListFilter) ([]loand
 
 func (m *loanRepoMock) SetOnChainSubmission(_ context.Context, _ string, _ string, _ bool) error {
 	return nil
+}
+
+func (m *loanRepoMock) RecordRepayment(_ context.Context, loanID string, amount int64) error {
+	m.recordRepaymentID = loanID
+	m.recordAmount = amount
+	return nil
+}
+
+func (m *loanRepoMock) MarkDefault(_ context.Context, loanID string) error {
+	m.defaultLoanID = loanID
+	return nil
+}
+
+func (m *loanRepoMock) GetPortfolioAnalytics(_ context.Context, lenderID string) (*loandomain.PortfolioAnalytics, error) {
+	return &loandomain.PortfolioAnalytics{LenderID: lenderID}, nil
 }
 
 type outboxRepoMock struct {
@@ -122,5 +140,43 @@ func TestProcessCSVUploadValidationError(t *testing.T) {
 	}
 	if len(result.Errors) != 1 || result.Errors[0].Field != "principal_minor" {
 		t.Fatalf("unexpected errors: %+v", result.Errors)
+	}
+}
+
+func TestRecordRepaymentQueuesOutbox(t *testing.T) {
+	borrowerRepo := &borrowerRepoMock{byHash: map[string]*borrowerdomain.Entity{}}
+	loanRepo := &loanRepoMock{}
+	outboxRepo := &outboxRepoMock{}
+	svc := loandomain.NewService(borrowerRepo, loanRepo, outboxRepo)
+
+	err := svc.RecordRepayment(context.Background(), loandomain.RepaymentInput{
+		LoanID:      "loan-1",
+		AmountMinor: 1000,
+		Currency:    "NGN",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(outboxRepo.topics) != 1 || outboxRepo.topics[0] != "record_repayment" {
+		t.Fatalf("expected record_repayment outbox topic")
+	}
+}
+
+func TestMarkDefaultQueuesOutbox(t *testing.T) {
+	borrowerRepo := &borrowerRepoMock{byHash: map[string]*borrowerdomain.Entity{}}
+	loanRepo := &loanRepoMock{}
+	outboxRepo := &outboxRepoMock{}
+	svc := loandomain.NewService(borrowerRepo, loanRepo, outboxRepo)
+
+	err := svc.MarkDefault(context.Background(), loandomain.DefaultInput{
+		LoanID:   "loan-1",
+		Reason:   "late payment",
+		LenderID: "lender-1",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(outboxRepo.topics) != 1 || outboxRepo.topics[0] != "mark_default" {
+		t.Fatalf("expected mark_default outbox topic")
 	}
 }

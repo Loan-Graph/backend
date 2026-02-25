@@ -28,6 +28,26 @@ func (s *fakeLoanService) ProcessCSVUpload(_ context.Context, _ string, _ io.Rea
 	return s.result, s.err
 }
 
+func (s *fakeLoanService) ListLoans(_ context.Context, _ loandomain.ListFilter) ([]loandomain.Entity, error) {
+	return []loandomain.Entity{}, nil
+}
+
+func (s *fakeLoanService) GetLoan(_ context.Context, _ string) (*loandomain.Entity, error) {
+	return &loandomain.Entity{ID: "loan-1"}, nil
+}
+
+func (s *fakeLoanService) RecordRepayment(_ context.Context, _ loandomain.RepaymentInput) error {
+	return nil
+}
+
+func (s *fakeLoanService) MarkDefault(_ context.Context, _ loandomain.DefaultInput) error {
+	return nil
+}
+
+func (s *fakeLoanService) PortfolioAnalytics(_ context.Context, lenderID string) (*loandomain.PortfolioAnalytics, error) {
+	return &loandomain.PortfolioAnalytics{LenderID: lenderID}, nil
+}
+
 func TestLoanUploadRouteRequiresAuth(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	jwtManager := auth.NewJWTManager("issuer", "aud", "super-secret")

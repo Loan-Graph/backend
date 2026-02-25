@@ -10,7 +10,11 @@ import (
 	"github.com/loangraph/backend/internal/blockchain"
 )
 
-const registerLoanTopic = "register_loan"
+const (
+	registerLoanTopic = "register_loan"
+	repaymentTopic    = "record_repayment"
+	defaultTopic      = "mark_default"
+)
 
 type OutboxJob struct {
 	ID          int64
@@ -77,6 +81,10 @@ func (w *Worker) processJob(ctx context.Context, job OutboxJob) error {
 	switch job.Topic {
 	case registerLoanTopic:
 		return w.processRegisterLoan(ctx, job)
+	case repaymentTopic:
+		return w.processRepayment(ctx, job)
+	case defaultTopic:
+		return w.processDefault(ctx, job)
 	default:
 		if job.Attempts >= w.maxAttempts {
 			return w.outboxRepo.MarkFailed(ctx, job.ID, "unsupported_topic")
@@ -84,6 +92,45 @@ func (w *Worker) processJob(ctx context.Context, job OutboxJob) error {
 		next := w.now().Add(w.retryBackoff(job.Attempts))
 		return w.outboxRepo.MarkRetry(ctx, job.ID, next, "unsupported_topic")
 	}
+}
+
+type repaymentPayload struct {
+	LoanID      string `json:"loan_id"`
+	AmountMinor int64  `json:"amount_minor"`
+	Currency    string `json:"currency"`
+}
+
+func (w *Worker) processRepayment(ctx context.Context, job OutboxJob) error {
+	var payload repaymentPayload
+	if err := json.Unmarshal(job.Payload, &payload); err != nil {
+		return w.handleJobError(ctx, job, fmt.Errorf("invalid_payload"))
+	}
+	if payload.LoanID == "" || payload.AmountMinor <= 0 || len(payload.Currency) != 3 {
+		return w.handleJobError(ctx, job, errors.New("invalid_repayment_payload"))
+	}
+	if _, err := w.writer.RecordRepayment(ctx, payload.LoanID, payload.AmountMinor, payload.Currency); err != nil {
+		return w.handleJobError(ctx, job, err)
+	}
+	return w.outboxRepo.MarkDone(ctx, job.ID)
+}
+
+type defaultPayload struct {
+	LoanID string `json:"loan_id"`
+	Reason string `json:"reason"`
+}
+
+func (w *Worker) processDefault(ctx context.Context, job OutboxJob) error {
+	var payload defaultPayload
+	if err := json.Unmarshal(job.Payload, &payload); err != nil {
+		return w.handleJobError(ctx, job, fmt.Errorf("invalid_payload"))
+	}
+	if payload.LoanID == "" {
+		return w.handleJobError(ctx, job, errors.New("invalid_default_payload"))
+	}
+	if _, err := w.writer.MarkDefault(ctx, payload.LoanID, payload.Reason); err != nil {
+		return w.handleJobError(ctx, job, err)
+	}
+	return w.outboxRepo.MarkDone(ctx, job.ID)
 }
 
 type registerLoanPayload struct {
