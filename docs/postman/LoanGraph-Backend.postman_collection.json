@@ -2,7 +2,7 @@
   "info": {
     "name": "LoanGraph Backend",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Backend endpoints including auth, loans lifecycle, portfolio, passport, worker/indexer-backed projections"
+    "description": "Backend endpoints including auth, loan lifecycle, passport, investor pools, worker/indexer projections"
   },
   "item": [
     {"name":"Health","request":{"method":"GET","url":{"raw":"{{base_url}}/health","host":["{{base_url}}"],"path":["health"]}}},
@@ -24,6 +24,11 @@
 
     {"name":"Passport - Snapshot","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/passport/{{borrower_hash}}","host":["{{base_url}}"],"path":["v1","passport","{{borrower_hash}}"]}}},
     {"name":"Passport - History","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/passport/{{borrower_hash}}/history?limit=20&offset=0","host":["{{base_url}}"],"path":["v1","passport","{{borrower_hash}}","history"],"query":[{"key":"limit","value":"20"},{"key":"offset","value":"0"}]}}},
-    {"name":"Passport - NFT","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/passport/{{borrower_hash}}/nft","host":["{{base_url}}"],"path":["v1","passport","{{borrower_hash}}","nft"]}}}
+    {"name":"Passport - NFT","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/passport/{{borrower_hash}}/nft","host":["{{base_url}}"],"path":["v1","passport","{{borrower_hash}}","nft"]}}},
+
+    {"name":"Pools - List","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/pools?currency=NGN&status=open&limit=20&offset=0","host":["{{base_url}}"],"path":["v1","pools"],"query":[{"key":"currency","value":"NGN"},{"key":"status","value":"open"},{"key":"limit","value":"20"},{"key":"offset","value":"0"}]}}},
+    {"name":"Pools - Get","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/pools/{{pool_id}}","host":["{{base_url}}"],"path":["v1","pools","{{pool_id}}"]}}},
+    {"name":"Pools - Performance","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/pools/{{pool_id}}/performance?days=30","host":["{{base_url}}"],"path":["v1","pools","{{pool_id}}","performance"],"query":[{"key":"days","value":"30"}]}}},
+    {"name":"Lenders - Profile","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/lenders/{{lender_id}}/profile","host":["{{base_url}}"],"path":["v1","lenders","{{lender_id}}","profile"]}}}
   ]
 }

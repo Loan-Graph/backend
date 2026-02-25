@@ -17,6 +17,7 @@ type Dependencies struct {
 	AuthHandler     *handlers.AuthHandler
 	LoanHandler     *handlers.LoanHandler
 	PassportHandler *handlers.PassportHandler
+	InvestorHandler *handlers.InvestorHandler
 	JWTManager      *auth.JWTManager
 }
 
@@ -66,6 +67,14 @@ func NewRouter(cfg config.Config, logger *slog.Logger, deps Dependencies) *gin.E
 			passportGroup.GET("/passport/:borrowerHash/history", deps.PassportHandler.GetPassportHistory)
 			passportGroup.GET("/passport/:borrowerHash/nft", deps.PassportHandler.GetPassportNFT)
 			passportGroup.GET("/portfolio/health", deps.PassportHandler.GetPortfolioHealth)
+		}
+		if deps.InvestorHandler != nil {
+			investorGroup := r.Group("/v1")
+			investorGroup.Use(middleware.RequireAuth(deps.JWTManager), middleware.RequireRole(auth.RoleLender, auth.RoleAdmin, auth.RoleInvestor))
+			investorGroup.GET("/pools", deps.InvestorHandler.ListPools)
+			investorGroup.GET("/pools/:poolId", deps.InvestorHandler.GetPool)
+			investorGroup.GET("/pools/:poolId/performance", deps.InvestorHandler.GetPoolPerformance)
+			investorGroup.GET("/lenders/:lenderId/profile", deps.InvestorHandler.GetLenderProfile)
 		}
 
 		adminHandler := handlers.NewAdminHandler()

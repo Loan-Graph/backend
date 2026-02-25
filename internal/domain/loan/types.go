@@ -69,6 +69,12 @@ type PortfolioHealth struct {
 	ScoreBands      []ScoreBand `json:"score_bands"`
 }
 
+type PerformancePoint struct {
+	Date              string `json:"date"`
+	RepaymentCount    int64  `json:"repayment_count"`
+	RepaidAmountMinor int64  `json:"repaid_amount_minor"`
+}
+
 type Repository interface {
 	Create(ctx context.Context, in CreateInput) (*Entity, error)
 	GetByID(ctx context.Context, id string) (*Entity, error)
@@ -80,4 +86,5 @@ type Repository interface {
 	GetPortfolioAnalytics(ctx context.Context, lenderID string) (*PortfolioAnalytics, error)
 	ListByBorrower(ctx context.Context, borrowerID string, limit, offset int32) ([]Entity, error)
 	GetPortfolioHealth(ctx context.Context, lenderID string) (*PortfolioHealth, error)
+	GetRepaymentTimeSeriesByLender(ctx context.Context, lenderID string, days int32) ([]PerformancePoint, error)
 }

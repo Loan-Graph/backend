@@ -94,6 +94,10 @@ func (m *loanRepoMock) GetPortfolioHealth(_ context.Context, lenderID string) (*
 	return &loandomain.PortfolioHealth{LenderID: lenderID}, nil
 }
 
+func (m *loanRepoMock) GetRepaymentTimeSeriesByLender(_ context.Context, _ string, _ int32) ([]loandomain.PerformancePoint, error) {
+	return []loandomain.PerformancePoint{}, nil
+}
+
 type outboxRepoMock struct {
 	topics []string
 }

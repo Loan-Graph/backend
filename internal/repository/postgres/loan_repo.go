@@ -283,3 +283,39 @@ WHERE b.lender_id = $1
 	out.ScoreBands[2].Count = b3
 	return out, nil
 }
+
+func (r *LoanRepository) GetRepaymentTimeSeriesByLender(ctx context.Context, lenderID string, days int32) ([]loan.PerformancePoint, error) {
+	if days <= 0 {
+		days = 30
+	}
+	q := `
+SELECT
+  TO_CHAR(DATE_TRUNC('day', r.recorded_at), 'YYYY-MM-DD') AS dt,
+  COUNT(*)::bigint AS repayment_count,
+  COALESCE(SUM(r.amount_minor), 0)::bigint AS repaid_amount_minor
+FROM repayments r
+JOIN loans l ON l.id = r.loan_id
+WHERE l.lender_id = $1
+  AND r.recorded_at >= NOW() - ($2::int || ' days')::interval
+GROUP BY dt
+ORDER BY dt ASC
+`
+	rows, err := r.pool.Query(ctx, q, lenderID, days)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	out := make([]loan.PerformancePoint, 0)
+	for rows.Next() {
+		var p loan.PerformancePoint
+		if err := rows.Scan(&p.Date, &p.RepaymentCount, &p.RepaidAmountMinor); err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
