@@ -70,6 +70,7 @@ From `backend/`:
 ```bash
 make run
 make run-worker
+make run-indexer
 make test
 make tidy
 make migrate-up
@@ -89,3 +90,4 @@ make compose-down
 - Transport is cookie-first for web (`HttpOnly` auth cookies).
 - Bearer-token transport is reserved for the mobile phase.
 - Outbox worker processes queued chain jobs from `outbox_jobs` (`make run-worker`).
+- Indexer processes `chain_events` and applies DB projections (`make run-indexer`).

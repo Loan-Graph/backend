@@ -1,10 +1,11 @@
 SHELL := /bin/bash
 
-.PHONY: help run run-worker test tidy fmt vet migrate-up migrate-down compose-up compose-down
+.PHONY: help run run-worker run-indexer test tidy fmt vet migrate-up migrate-down compose-up compose-down
 
 help:
 	@echo "make run           - run API locally"
 	@echo "make run-worker    - run outbox worker locally"
+	@echo "make run-indexer   - run chain event indexer locally"
 	@echo "make test          - run go tests"
 	@echo "make tidy          - go mod tidy"
 	@echo "make fmt           - format go files"
@@ -19,6 +20,9 @@ run:
 
 run-worker:
 	go run ./cmd/worker
+
+run-indexer:
+	go run ./cmd/indexer
 
 test:
 	go test ./...

@@ -34,8 +34,10 @@ type Config struct {
 	AuthEnableBearer          bool
 	AuthBootstrapAdminSubject string
 
-	WorkerPollInterval time.Duration
-	WorkerBatchSize    int32
+	WorkerPollInterval  time.Duration
+	WorkerBatchSize     int32
+	IndexerPollInterval time.Duration
+	IndexerBatchSize    int32
 }
 
 func Load() Config {
@@ -66,8 +68,10 @@ func Load() Config {
 		AuthEnableBearer:          getEnvBool("AUTH_ENABLE_BEARER", false),
 		AuthBootstrapAdminSubject: getEnv("AUTH_BOOTSTRAP_ADMIN_SUBJECT", ""),
 
-		WorkerPollInterval: getEnvDuration("WORKER_POLL_INTERVAL", 2*time.Second),
-		WorkerBatchSize:    getEnvInt32("WORKER_BATCH_SIZE", 20),
+		WorkerPollInterval:  getEnvDuration("WORKER_POLL_INTERVAL", 2*time.Second),
+		WorkerBatchSize:     getEnvInt32("WORKER_BATCH_SIZE", 20),
+		IndexerPollInterval: getEnvDuration("INDEXER_POLL_INTERVAL", 2*time.Second),
+		IndexerBatchSize:    getEnvInt32("INDEXER_BATCH_SIZE", 100),
 	}
 }
 
