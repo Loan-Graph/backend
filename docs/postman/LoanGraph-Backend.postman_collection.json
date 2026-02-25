@@ -2,7 +2,7 @@
   "info": {
     "name": "LoanGraph Backend",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Backend endpoints including auth, loan lifecycle, passport, investor pools, worker/indexer projections"
+    "description": "Backend endpoints including auth, loan lifecycle, passport, investor pools, and admin APIs"
   },
   "item": [
     {"name":"Health","request":{"method":"GET","url":{"raw":"{{base_url}}/health","host":["{{base_url}}"],"path":["health"]}}},
@@ -29,6 +29,10 @@
     {"name":"Pools - List","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/pools?currency=NGN&status=open&limit=20&offset=0","host":["{{base_url}}"],"path":["v1","pools"],"query":[{"key":"currency","value":"NGN"},{"key":"status","value":"open"},{"key":"limit","value":"20"},{"key":"offset","value":"0"}]}}},
     {"name":"Pools - Get","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/pools/{{pool_id}}","host":["{{base_url}}"],"path":["v1","pools","{{pool_id}}"]}}},
     {"name":"Pools - Performance","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/pools/{{pool_id}}/performance?days=30","host":["{{base_url}}"],"path":["v1","pools","{{pool_id}}","performance"],"query":[{"key":"days","value":"30"}]}}},
-    {"name":"Lenders - Profile","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/lenders/{{lender_id}}/profile","host":["{{base_url}}"],"path":["v1","lenders","{{lender_id}}","profile"]}}}
+    {"name":"Lenders - Profile","request":{"method":"GET","url":{"raw":"{{base_url}}/v1/lenders/{{lender_id}}/profile","host":["{{base_url}}"],"path":["v1","lenders","{{lender_id}}","profile"]}}},
+
+    {"name":"Admin - System Health","request":{"method":"GET","url":{"raw":"{{base_url}}/admin/system/health","host":["{{base_url}}"],"path":["admin","system","health"]}}},
+    {"name":"Admin - Onboard Lender","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"name\": \"New Lender\",\n  \"country_code\": \"NG\",\n  \"wallet_address\": \"0x8888888888888888888888888888888888888888\"\n}"},"url":{"raw":"{{base_url}}/admin/lenders","host":["{{base_url}}"],"path":["admin","lenders"]}}},
+    {"name":"Admin - Update Lender Status","request":{"method":"PATCH","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"kyc_status\": \"approved\"\n}"},"url":{"raw":"{{base_url}}/admin/lenders/{{lender_id}}/status","host":["{{base_url}}"],"path":["admin","lenders","{{lender_id}}","status"]}}}
   ]
 }

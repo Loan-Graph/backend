@@ -51,3 +51,9 @@ func (r *LenderRepository) GetByWallet(ctx context.Context, walletAddress string
 	}
 	return out, nil
 }
+
+func (r *LenderRepository) UpdateKYCStatus(ctx context.Context, lenderID, kycStatus string) error {
+	q := `UPDATE lenders SET kyc_status = $2, updated_at = NOW() WHERE id = $1`
+	_, err := r.pool.Exec(ctx, q, lenderID, kycStatus)
+	return err
+}

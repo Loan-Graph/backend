@@ -86,6 +86,7 @@ func ResetTables(t *testing.T, pool *pgxpool.Pool) {
 
 	q := `
 TRUNCATE TABLE
+  admin_audit_logs,
   outbox_jobs,
   chain_events,
   pools,

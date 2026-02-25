@@ -76,6 +76,57 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden (insufficient role)
+  /admin/lenders:
+    post:
+      summary: Onboard a lender (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, country_code, wallet_address]
+              properties:
+                name: { type: string }
+                country_code: { type: string }
+                wallet_address: { type: string }
+                kyc_status: { type: string }
+                tier: { type: string }
+      responses:
+        '201':
+          description: Lender created
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /admin/lenders/{lenderId}/status:
+    patch:
+      summary: Update lender KYC status (admin only)
+      parameters:
+        - in: path
+          name: lenderId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kyc_status]
+              properties:
+                kyc_status: { type: string }
+      responses:
+        '200':
+          description: Status updated
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
   /v1/loans/upload:
     post:
       summary: Upload a lender loan book CSV and queue on-chain registration jobs

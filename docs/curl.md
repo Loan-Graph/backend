@@ -172,3 +172,21 @@ curl -i -b cookies.txt "$BASE_URL/v1/pools/<POOL_ID>/performance?days=30"
 ```bash
 curl -i -b cookies.txt "$BASE_URL/v1/lenders/<LENDER_ID>/profile"
 ```
+
+## 23) Admin onboard lender (admin role)
+
+```bash
+curl -i -b cookies.txt \
+  -H "Content-Type: application/json" \
+  -X POST "$BASE_URL/admin/lenders" \
+  -d '{"name":"New Lender","country_code":"NG","wallet_address":"0x8888888888888888888888888888888888888888"}'
+```
+
+## 24) Admin update lender status (admin role)
+
+```bash
+curl -i -b cookies.txt \
+  -H "Content-Type: application/json" \
+  -X PATCH "$BASE_URL/admin/lenders/<LENDER_ID>/status" \
+  -d '{"kyc_status":"approved"}'
+```
