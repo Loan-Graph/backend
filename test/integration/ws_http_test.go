@@ -73,7 +73,15 @@ func TestWebSocketSubscribeAndReceive(t *testing.T) {
 	if err := websocket.Message.Send(conn, sub); err != nil {
 		t.Fatalf("send subscribe: %v", err)
 	}
-	time.Sleep(100 * time.Millisecond)
+	_ = conn.SetDeadline(time.Now().Add(2 * time.Second))
+	var ack string
+	if err := websocket.Message.Receive(conn, &ack); err != nil {
+		t.Fatalf("receive ws ack: %v", err)
+	}
+	if !strings.Contains(ack, "subscribed") {
+		t.Fatalf("unexpected ws ack: %s", ack)
+	}
+	time.Sleep(50 * time.Millisecond)
 
 	hub.Publish("pool:repayments:pool-1", []byte(`{"event":"repayment_recorded","data":{"loan_id":"loan-1"}}`))
 

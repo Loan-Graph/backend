@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	lenderdomain "github.com/loangraph/backend/internal/domain/lender"
@@ -16,6 +18,8 @@ type AdminService interface {
 type AdminHandler struct {
 	adminService AdminService
 }
+
+var evmAddressPattern = regexp.MustCompile(`^0x[0-9a-fA-F]{40}$`)
 
 func NewAdminHandler(adminService AdminService) *AdminHandler {
 	return &AdminHandler{adminService: adminService}
@@ -41,11 +45,15 @@ func (h *AdminHandler) OnboardLender(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_request"})
 		return
 	}
+	if strings.TrimSpace(req.Name) == "" || len(strings.TrimSpace(req.CountryCode)) != 2 || !evmAddressPattern.MatchString(strings.TrimSpace(req.WalletAddress)) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_request"})
+		return
+	}
 	adminUserID, _ := c.Get("user_id")
 	created, err := h.adminService.OnboardLender(c.Request.Context(), toString(adminUserID), lenderdomain.CreateInput{
-		Name:          req.Name,
-		CountryCode:   req.CountryCode,
-		WalletAddress: req.WalletAddress,
+		Name:          strings.TrimSpace(req.Name),
+		CountryCode:   strings.ToUpper(strings.TrimSpace(req.CountryCode)),
+		WalletAddress: strings.TrimSpace(req.WalletAddress),
 		KYCStatus:     req.KYCStatus,
 		Tier:          req.Tier,
 	})
@@ -66,6 +74,10 @@ func (h *AdminHandler) UpdateLenderStatus(c *gin.Context) {
 		KYCStatus string `json:"kyc_status"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_request"})
+		return
+	}
+	if strings.TrimSpace(req.KYCStatus) == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_request"})
 		return
 	}

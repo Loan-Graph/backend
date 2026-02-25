@@ -103,3 +103,4 @@ make compose-down
 - Outbox worker processes queued chain jobs from `outbox_jobs` (`make run-worker`).
 - Indexer processes `chain_events` and applies DB projections (`make run-indexer`).
 - WebSocket hub streams pool repayment and lender portfolio events from DB-polled notifier.
+- Global request size cap is configurable via `MAX_REQUEST_BODY_BYTES` (defaults to 60 MiB).

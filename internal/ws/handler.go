@@ -45,16 +45,21 @@ func (h *Handler) reader(client *Client) {
 		}
 		var msg subscribeMessage
 		if err := json.Unmarshal([]byte(raw), &msg); err != nil {
+			client.send([]byte(`{"event":"error","message":"invalid_json"}`))
 			continue
 		}
 		if strings.ToLower(strings.TrimSpace(msg.Action)) != "subscribe" {
+			client.send([]byte(`{"event":"error","message":"unsupported_action"}`))
 			continue
 		}
 		topic := subscriptionTopic(msg)
 		if topic == "" {
+			client.send([]byte(`{"event":"error","message":"invalid_subscription"}`))
 			continue
 		}
 		h.hub.Subscribe(topic, client)
+		ack, _ := json.Marshal(map[string]string{"event": "subscribed", "topic": topic})
+		client.send(ack)
 	}
 }
 

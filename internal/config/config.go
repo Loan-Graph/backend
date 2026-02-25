@@ -40,6 +40,7 @@ type Config struct {
 	IndexerBatchSize    int32
 	WSEnabled           bool
 	WSPollInterval      time.Duration
+	MaxRequestBodyBytes int64
 }
 
 func Load() Config {
@@ -76,6 +77,7 @@ func Load() Config {
 		IndexerBatchSize:    getEnvInt32("INDEXER_BATCH_SIZE", 100),
 		WSEnabled:           getEnvBool("WS_ENABLED", true),
 		WSPollInterval:      getEnvDuration("WS_POLL_INTERVAL", 2*time.Second),
+		MaxRequestBodyBytes: getEnvInt64("MAX_REQUEST_BODY_BYTES", 62914560), // 60 MiB
 	}
 }
 
@@ -93,6 +95,17 @@ func getEnv(key, fallback string) string {
 func getEnvInt32(key string, fallback int32) int32 {
 	if v, ok := os.LookupEnv(key); ok && v != "" {
 		var out int32
+		_, err := fmt.Sscanf(v, "%d", &out)
+		if err == nil {
+			return out
+		}
+	}
+	return fallback
+}
+
+func getEnvInt64(key string, fallback int64) int64 {
+	if v, ok := os.LookupEnv(key); ok && v != "" {
+		var out int64
 		_, err := fmt.Sscanf(v, "%d", &out)
 		if err == nil {
 			return out
