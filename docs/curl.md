@@ -148,3 +148,27 @@ curl -i -b cookies.txt "$BASE_URL/v1/passport/<BORROWER_HASH_HEX>/history?limit=
 ```bash
 curl -i -b cookies.txt "$BASE_URL/v1/passport/<BORROWER_HASH_HEX>/nft"
 ```
+
+## 19) List pools
+
+```bash
+curl -i -b cookies.txt "$BASE_URL/v1/pools?currency=NGN&status=open&limit=20&offset=0"
+```
+
+## 20) Get pool
+
+```bash
+curl -i -b cookies.txt "$BASE_URL/v1/pools/<POOL_ID>"
+```
+
+## 21) Get pool performance
+
+```bash
+curl -i -b cookies.txt "$BASE_URL/v1/pools/<POOL_ID>/performance?days=30"
+```
+
+## 22) Get lender profile
+
+```bash
+curl -i -b cookies.txt "$BASE_URL/v1/lenders/<LENDER_ID>/profile"
+```

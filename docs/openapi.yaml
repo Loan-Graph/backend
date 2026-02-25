@@ -251,3 +251,67 @@ paths:
           description: Passport NFT response
         '404':
           description: Passport NFT not found
+  /v1/pools:
+    get:
+      summary: List investor pools
+      parameters:
+        - in: query
+          name: lender_id
+          schema: { type: string }
+        - in: query
+          name: currency
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Pool list response
+  /v1/pools/{poolId}:
+    get:
+      summary: Get pool details
+      parameters:
+        - in: path
+          name: poolId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Pool details response
+        '404':
+          description: Pool not found
+  /v1/pools/{poolId}/performance:
+    get:
+      summary: Get pool repayment performance time series
+      parameters:
+        - in: path
+          name: poolId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: days
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Pool performance response
+        '400':
+          description: Invalid request
+  /v1/lenders/{lenderId}/profile:
+    get:
+      summary: Get lender public profile
+      parameters:
+        - in: path
+          name: lenderId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Lender profile response
+        '404':
+          description: Lender not found

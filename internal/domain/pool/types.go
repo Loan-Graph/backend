@@ -30,4 +30,5 @@ type Repository interface {
 	Create(ctx context.Context, in CreateInput) (*Entity, error)
 	GetByID(ctx context.Context, id string) (*Entity, error)
 	ListByLender(ctx context.Context, lenderID string) ([]Entity, error)
+	List(ctx context.Context, lenderID, currencyCode, status string, limit, offset int32) ([]Entity, error)
 }
