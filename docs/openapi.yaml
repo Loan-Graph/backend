@@ -76,3 +76,28 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden (insufficient role)
+  /v1/loans/upload:
+    post:
+      summary: Upload a lender loan book CSV and queue on-chain registration jobs
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [lender_id, file]
+              properties:
+                lender_id:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Upload processed successfully
+        '400':
+          description: Validation failure in request or CSV content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (insufficient role)
