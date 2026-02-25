@@ -34,13 +34,20 @@ type Config struct {
 	AuthEnableBearer          bool
 	AuthBootstrapAdminSubject string
 
-	WorkerPollInterval  time.Duration
-	WorkerBatchSize     int32
-	IndexerPollInterval time.Duration
-	IndexerBatchSize    int32
-	WSEnabled           bool
-	WSPollInterval      time.Duration
-	MaxRequestBodyBytes int64
+	WorkerPollInterval     time.Duration
+	WorkerBatchSize        int32
+	ChainWriterMode        string
+	CreditcoinHTTPRPC      string
+	CreditcoinChainID      int64
+	LoanRegistryProxy      string
+	ChainWriterFromAddress string
+	LenderSignerPrivateKey string
+	ChainTxGasLimit        uint64
+	IndexerPollInterval    time.Duration
+	IndexerBatchSize       int32
+	WSEnabled              bool
+	WSPollInterval         time.Duration
+	MaxRequestBodyBytes    int64
 }
 
 func Load() Config {
@@ -71,13 +78,20 @@ func Load() Config {
 		AuthEnableBearer:          getEnvBool("AUTH_ENABLE_BEARER", false),
 		AuthBootstrapAdminSubject: getEnv("AUTH_BOOTSTRAP_ADMIN_SUBJECT", ""),
 
-		WorkerPollInterval:  getEnvDuration("WORKER_POLL_INTERVAL", 2*time.Second),
-		WorkerBatchSize:     getEnvInt32("WORKER_BATCH_SIZE", 20),
-		IndexerPollInterval: getEnvDuration("INDEXER_POLL_INTERVAL", 2*time.Second),
-		IndexerBatchSize:    getEnvInt32("INDEXER_BATCH_SIZE", 100),
-		WSEnabled:           getEnvBool("WS_ENABLED", true),
-		WSPollInterval:      getEnvDuration("WS_POLL_INTERVAL", 2*time.Second),
-		MaxRequestBodyBytes: getEnvInt64("MAX_REQUEST_BODY_BYTES", 62914560), // 60 MiB
+		WorkerPollInterval:     getEnvDuration("WORKER_POLL_INTERVAL", 2*time.Second),
+		WorkerBatchSize:        getEnvInt32("WORKER_BATCH_SIZE", 20),
+		ChainWriterMode:        getEnv("CHAIN_WRITER_MODE", "stub"),
+		CreditcoinHTTPRPC:      getEnv("CREDITCOIN_HTTP_RPC", ""),
+		CreditcoinChainID:      getEnvInt64("CREDITCOIN_CHAIN_ID", 102031),
+		LoanRegistryProxy:      getEnv("LOAN_REGISTRY_PROXY", ""),
+		ChainWriterFromAddress: getEnv("CHAIN_WRITER_FROM_ADDRESS", ""),
+		LenderSignerPrivateKey: getEnv("LENDER_SIGNER_PRIVATE_KEY", ""),
+		ChainTxGasLimit:        getEnvUint64("CHAIN_TX_GAS_LIMIT", 300000),
+		IndexerPollInterval:    getEnvDuration("INDEXER_POLL_INTERVAL", 2*time.Second),
+		IndexerBatchSize:       getEnvInt32("INDEXER_BATCH_SIZE", 100),
+		WSEnabled:              getEnvBool("WS_ENABLED", true),
+		WSPollInterval:         getEnvDuration("WS_POLL_INTERVAL", 2*time.Second),
+		MaxRequestBodyBytes:    getEnvInt64("MAX_REQUEST_BODY_BYTES", 62914560), // 60 MiB
 	}
 }
 
@@ -106,6 +120,17 @@ func getEnvInt32(key string, fallback int32) int32 {
 func getEnvInt64(key string, fallback int64) int64 {
 	if v, ok := os.LookupEnv(key); ok && v != "" {
 		var out int64
+		_, err := fmt.Sscanf(v, "%d", &out)
+		if err == nil {
+			return out
+		}
+	}
+	return fallback
+}
+
+func getEnvUint64(key string, fallback uint64) uint64 {
+	if v, ok := os.LookupEnv(key); ok && v != "" {
+		var out uint64
 		_, err := fmt.Sscanf(v, "%d", &out)
 		if err == nil {
 			return out

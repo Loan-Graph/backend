@@ -104,3 +104,5 @@ make compose-down
 - Indexer processes `chain_events` and applies DB projections (`make run-indexer`).
 - WebSocket hub streams pool repayment and lender portfolio events from DB-polled notifier.
 - Global request size cap is configurable via `MAX_REQUEST_BODY_BYTES` (defaults to 60 MiB).
+- Chain writer mode is configurable via `CHAIN_WRITER_MODE=stub|real`.
+- `real` mode currently uses node-managed signing over JSON-RPC (`eth_sendTransaction`) with `CHAIN_WRITER_FROM_ADDRESS` and `CREDITCOIN_HTTP_RPC`.

@@ -30,10 +30,16 @@ func main() {
 	}
 	defer pool.Close()
 
+	writer, err := blockchain.NewWriterFromConfig(cfg)
+	if err != nil {
+		logger.Error("failed to initialize chain writer", "err", err)
+		os.Exit(1)
+	}
+
 	worker := jobs.NewWorker(
 		postgresrepo.NewOutboxRepository(pool),
 		postgresrepo.NewLoanRepository(pool),
-		blockchain.NewStubWriter(),
+		writer,
 	)
 
 	interval := cfg.WorkerPollInterval
