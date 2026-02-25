@@ -9,8 +9,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/loangraph/backend/internal/auth"
 	"github.com/loangraph/backend/internal/config"
 	"github.com/loangraph/backend/internal/db"
+	"github.com/loangraph/backend/internal/http/handlers"
 	"github.com/loangraph/backend/internal/observability"
 	"github.com/loangraph/backend/internal/server"
 )
@@ -29,7 +31,13 @@ func main() {
 	}
 	defer pool.Close()
 
-	r := server.NewRouter(cfg, logger, pool)
+	authRepo := db.NewAuthRepository(pool)
+	jwtManager := auth.NewJWTManager(cfg.JWTIssuer, cfg.JWTAudience, cfg.JWTSigningKey)
+	privyVerifier := auth.NewPrivyTokenVerifier(cfg.PrivyIssuer, cfg.PrivyAudience, cfg.PrivyVerificationKey, cfg.PrivyJWKSURL)
+	authService := auth.NewService(authRepo, jwtManager, privyVerifier, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+	authHandler := handlers.NewAuthHandler(authService, auth.CookieConfig{Domain: cfg.CookieDomain, Secure: cfg.CookieSecure}, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+
+	r := server.NewRouter(cfg, logger, server.Dependencies{Pinger: pool, AuthHandler: authHandler, JWTManager: jwtManager})
 	httpServer := &http.Server{
 		Addr:              cfg.Addr(),
 		Handler:           r,

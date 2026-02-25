@@ -21,7 +21,7 @@ func (p fakePinger) Ping(_ context.Context) error {
 }
 
 func TestHealthEndpoint(t *testing.T) {
-	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), fakePinger{})
+	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), server.Dependencies{Pinger: fakePinger{}})
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	w := httptest.NewRecorder()
@@ -33,7 +33,7 @@ func TestHealthEndpoint(t *testing.T) {
 }
 
 func TestReadyEndpointOK(t *testing.T) {
-	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), fakePinger{})
+	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), server.Dependencies{Pinger: fakePinger{}})
 
 	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
 	w := httptest.NewRecorder()
@@ -45,7 +45,7 @@ func TestReadyEndpointOK(t *testing.T) {
 }
 
 func TestReadyEndpointDBFailure(t *testing.T) {
-	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), fakePinger{err: errors.New("db down")})
+	r := server.NewRouter(config.Config{Env: "test"}, slog.Default(), server.Dependencies{Pinger: fakePinger{err: errors.New("db down")}})
 
 	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
 	w := httptest.NewRecorder()

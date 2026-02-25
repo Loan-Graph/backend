@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
+	"time"
 )
 
 type Config struct {
@@ -12,6 +14,24 @@ type Config struct {
 	DBMaxConns        int32
 	DBMinConns        int32
 	DBMaxConnLifetime string
+
+	JWTIssuer     string
+	JWTAudience   string
+	JWTSigningKey string
+	JWTAccessTTL  time.Duration
+	JWTRefreshTTL time.Duration
+
+	CookieDomain string
+	CookieSecure bool
+
+	PrivyAppID           string
+	PrivyAppSecret       string
+	PrivyJWKSURL         string
+	PrivyIssuer          string
+	PrivyAudience        string
+	PrivyVerificationKey string
+
+	AuthEnableBearer bool
 }
 
 func Load() Config {
@@ -22,6 +42,24 @@ func Load() Config {
 		DBMaxConns:        getEnvInt32("DB_MAX_CONNS", 25),
 		DBMinConns:        getEnvInt32("DB_MIN_CONNS", 2),
 		DBMaxConnLifetime: getEnv("DB_MAX_CONN_LIFETIME", "30m"),
+
+		JWTIssuer:     getEnv("JWT_ISSUER", "loangraph-backend"),
+		JWTAudience:   getEnv("JWT_AUDIENCE", "loangraph-api"),
+		JWTSigningKey: getEnv("JWT_SIGNING_KEY", "dev-insecure-key-change-me"),
+		JWTAccessTTL:  getEnvDuration("JWT_ACCESS_TTL", 15*time.Minute),
+		JWTRefreshTTL: getEnvDuration("JWT_REFRESH_TTL", 7*24*time.Hour),
+
+		CookieDomain: getEnv("COOKIE_DOMAIN", ""),
+		CookieSecure: getEnvBool("COOKIE_SECURE", false),
+
+		PrivyAppID:           getEnv("PRIVY_APP_ID", ""),
+		PrivyAppSecret:       getEnv("PRIVY_APP_SECRET", ""),
+		PrivyJWKSURL:         getEnv("PRIVY_JWKS_URL", ""),
+		PrivyIssuer:          getEnv("PRIVY_ISSUER", ""),
+		PrivyAudience:        getEnv("PRIVY_AUDIENCE", ""),
+		PrivyVerificationKey: getEnv("PRIVY_VERIFICATION_KEY", ""),
+
+		AuthEnableBearer: getEnvBool("AUTH_ENABLE_BEARER", false),
 	}
 }
 
@@ -43,6 +81,24 @@ func getEnvInt32(key string, fallback int32) int32 {
 		if err == nil {
 			return out
 		}
+	}
+	return fallback
+}
+
+func getEnvDuration(key string, fallback time.Duration) time.Duration {
+	if v, ok := os.LookupEnv(key); ok && strings.TrimSpace(v) != "" {
+		d, err := time.ParseDuration(v)
+		if err == nil {
+			return d
+		}
+	}
+	return fallback
+}
+
+func getEnvBool(key string, fallback bool) bool {
+	if v, ok := os.LookupEnv(key); ok && strings.TrimSpace(v) != "" {
+		n := strings.ToLower(strings.TrimSpace(v))
+		return n == "1" || n == "true" || n == "yes"
 	}
 	return fallback
 }

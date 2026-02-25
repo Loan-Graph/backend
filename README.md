@@ -1,6 +1,6 @@
-# LoanGraph Backend (Phase 1 Bootstrap)
+# LoanGraph Backend
 
-Go Gin API bootstrap with Postgres and SQL migrations.
+Go Gin API with Postgres, SQL migrations, and cookie-first authentication.
 
 ## Stack
 - Go 1.23+
@@ -8,6 +8,14 @@ Go Gin API bootstrap with Postgres and SQL migrations.
 - pgx
 - PostgreSQL 16
 - golang-migrate
+- JWT (backend sessions)
+- Privy access token verification (identity bootstrap)
+
+## Product Positioning (Auth)
+- Users onboard with email via Privy.
+- Email verification happens in Privy.
+- Privy wallet is created behind the scenes (no wallet setup friction).
+- Backend issues LoanGraph JWT cookies for API authorization/auditability.
 
 ## Quickstart
 1. Copy env file:
@@ -36,6 +44,12 @@ curl http://localhost:8090/ready
 curl http://localhost:8090/v1/meta
 ```
 
+## Auth Endpoints
+- `POST /v1/auth/privy/login`
+- `POST /v1/auth/refresh`
+- `POST /v1/auth/logout`
+- `GET /v1/auth/me`
+
 ## Make Commands
 From `backend/`:
 
@@ -57,4 +71,5 @@ make compose-down
 
 ## Notes
 - No AWS/S3 integrations are included in this phase.
-- Auth implementation is intentionally deferred to next increment.
+- Transport is cookie-first for web (`HttpOnly` auth cookies).
+- Bearer-token transport is reserved for the mobile phase.

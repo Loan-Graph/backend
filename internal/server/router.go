@@ -5,12 +5,20 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/loangraph/backend/internal/auth"
 	"github.com/loangraph/backend/internal/config"
 	"github.com/loangraph/backend/internal/http/handlers"
+	"github.com/loangraph/backend/internal/http/middleware"
 	"github.com/loangraph/backend/internal/version"
 )
 
-func NewRouter(cfg config.Config, logger *slog.Logger, pinger handlers.Pinger) *gin.Engine {
+type Dependencies struct {
+	Pinger      handlers.Pinger
+	AuthHandler *handlers.AuthHandler
+	JWTManager  *auth.JWTManager
+}
+
+func NewRouter(cfg config.Config, logger *slog.Logger, deps Dependencies) *gin.Engine {
 	if cfg.Env == "prod" || cfg.Env == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -22,12 +30,23 @@ func NewRouter(cfg config.Config, logger *slog.Logger, pinger handlers.Pinger) *
 		c.Next()
 	})
 
-	health := handlers.NewHealthHandler(pinger)
+	health := handlers.NewHealthHandler(deps.Pinger)
 	meta := handlers.NewMetaHandler(cfg.Env, version.Version)
 
 	r.GET("/health", health.Health)
 	r.GET("/ready", health.Ready)
 	r.GET("/v1/meta", meta.GetMeta)
+
+	if deps.AuthHandler != nil && deps.JWTManager != nil {
+		authGroup := r.Group("/v1/auth")
+		authGroup.POST("/privy/login", deps.AuthHandler.LoginWithPrivy)
+		authGroup.POST("/refresh", deps.AuthHandler.Refresh)
+		authGroup.POST("/logout", deps.AuthHandler.Logout)
+
+		protected := authGroup.Group("")
+		protected.Use(middleware.RequireAuth(deps.JWTManager))
+		protected.GET("/me", deps.AuthHandler.Me)
+	}
 
 	r.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not_found"})
