@@ -1,0 +1,75 @@
+openapi: 3.0.3
+info:
+  title: LoanGraph Backend API
+  version: 0.1.0
+  description: Initial backend bootstrap endpoints.
+servers:
+  - url: http://localhost:8090
+paths:
+  /health:
+    get:
+      summary: Liveness endpoint
+      responses:
+        '200':
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: loangraph-backend
+  /ready:
+    get:
+      summary: Readiness endpoint with DB check
+      responses:
+        '200':
+          description: Service and DB are ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ready
+                  database:
+                    type: string
+                    example: ok
+        '503':
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: not_ready
+                  database:
+                    type: string
+                    example: error
+  /v1/meta:
+    get:
+      summary: Service metadata endpoint
+      responses:
+        '200':
+          description: Metadata response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: LoanGraph Backend
+                  version:
+                    type: string
+                    example: dev
+                  env:
+                    type: string
+                    example: local

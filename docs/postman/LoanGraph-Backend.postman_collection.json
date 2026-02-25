@@ -1,0 +1,45 @@
+{
+  "info": {
+    "name": "LoanGraph Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Bootstrap backend endpoints"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Ready",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/ready",
+          "host": ["{{base_url}}"],
+          "path": ["ready"]
+        }
+      }
+    },
+    {
+      "name": "Meta",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/meta",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "meta"]
+        }
+      }
+    }
+  ]
+}
