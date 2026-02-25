@@ -12,23 +12,11 @@ export BASE_URL="http://localhost:8090"
 curl -i "$BASE_URL/health"
 ```
 
-Expected:
-- HTTP 200
-- `{"service":"loangraph-backend","status":"ok"}`
-
 ## 2) Ready
 
 ```bash
 curl -i "$BASE_URL/ready"
 ```
-
-Expected when DB is reachable:
-- HTTP 200
-- `{"database":"ok","status":"ready"}`
-
-Expected when DB is down:
-- HTTP 503
-- `{"database":"error","status":"not_ready"}`
 
 ## 3) Meta
 
@@ -36,16 +24,44 @@ Expected when DB is down:
 curl -i "$BASE_URL/v1/meta"
 ```
 
-Expected:
-- HTTP 200
-- JSON with `name`, `version`, `env`
-
-## 4) Not Found Example
+## 4) Login with Privy token
 
 ```bash
-curl -i "$BASE_URL/does-not-exist"
+curl -i -c cookies.txt \
+  -H "Content-Type: application/json" \
+  -X POST "$BASE_URL/v1/auth/privy/login" \
+  -d '{"privy_access_token":"<PRIVY_ACCESS_TOKEN>"}'
 ```
 
 Expected:
-- HTTP 404
-- `{"error":"not_found"}`
+- HTTP 200
+- `lg_access` and `lg_refresh` cookies set
+
+## 5) Get current user
+
+```bash
+curl -i -b cookies.txt "$BASE_URL/v1/auth/me"
+```
+
+Expected:
+- HTTP 200 with user object
+
+## 6) Refresh session
+
+```bash
+curl -i -b cookies.txt -c cookies.txt -X POST "$BASE_URL/v1/auth/refresh"
+```
+
+Expected:
+- HTTP 200
+- rotated cookies
+
+## 7) Logout
+
+```bash
+curl -i -b cookies.txt -c cookies.txt -X POST "$BASE_URL/v1/auth/logout"
+```
+
+Expected:
+- HTTP 200
+- auth cookies cleared
